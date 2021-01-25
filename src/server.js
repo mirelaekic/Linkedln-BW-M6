@@ -2,10 +2,10 @@ const express = require("express");
 const cors  = require("cors");
 const { join } =  require("path");
 const listEndpoints = require("express-list-endpoints");
-
-const profileRouter = require("./services/profiles");
-const postsRouter = require("./services/posts");
-const experienceRouter = require("./services/experience");
+const mongoose = require("mongoose");
+const profileRouter = require("./services/profiles/index");
+//const postsRouter = require("./services/posts");
+//const experienceRouter = require("./services/experience");
 
 require("dotenv/config");
 const {
@@ -25,8 +25,8 @@ server.use(express.json());
 server.use(cors());
 
 server.use("/profile", profileRouter);
-server.use("/post", postsRouter);
-server.use("/experience", experienceRouter);
+//server.use("/post", postsRouter);
+//server.use("/experience", experienceRouter);
 
 server.use(badRequestHandler);
 server.use(notFoundHandler);
