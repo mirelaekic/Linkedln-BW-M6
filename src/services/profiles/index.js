@@ -17,7 +17,6 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const profileSchema = require("./mongo");
 const fs = require("fs");
-const { nextTick } = require("process");
 //const experienceSchema = require("../experience");
 //const postSchema = require("../posts");
 const router = express.Router();
@@ -67,10 +66,10 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.post("/:id/picture", authenticateToken, async (req, res, next) => {
+/**router.post("/:id/picture", authenticateToken, async (req, res, next) => {
     const postPic = await profileSchema.findById(req.params.id)
     
-    })
+    })*/
     
 router.put("/:id", authenticateToken, async (req, res, next ) => {
     try {
