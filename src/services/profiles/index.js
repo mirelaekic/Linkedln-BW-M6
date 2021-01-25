@@ -16,6 +16,10 @@ Generates and download a PDF with the CV of the user (details, picture, experien
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const profileSchema = require("./mongo");
+const fs = require("fs");
+const { nextTick } = require("process");
+//const experienceSchema = require("../experience");
+//const postSchema = require("../posts");
 const router = express.Router();
 require("dotenv/config");
 
@@ -34,10 +38,18 @@ function authenticateToken(req, res, next) {
 router.get("/", authenticateToken,async (req, res, next) => {
     try {
         const profiles = await profileSchema.find();
-        const resp = res.json(profiles.filter(profile => profile.username === req.user.name))
-        res.send(resp)
+        ///const resp = res.json(profiles.filter(profile => profile.username === req.user.name))
+        res.send(profiles)
     } catch (error) {
         next(error) 
+    }
+})
+router.get("/:id", authenticateToken, async (req, res, next) => {
+    try {
+        const profile = await profileSchema.findById(req.params.id);
+        res.send(profile)
+    } catch (error) {
+        next(error)
     }
 })
 
@@ -55,6 +67,27 @@ router.post("/", async (req, res, next) => {
     }
 })
 
+router.post("/:id/picture", authenticateToken, async (req, res, next) => {
+    const postPic = await profileSchema.findById(req.params.id)
+    
+    })
+    
+router.put("/:id", authenticateToken, async (req, res, next ) => {
+    try {
+        const profile = await profileSchema.findByIdAndUpdate(
+            req.params.id,req.body,{ runValidators: true, new: true}
+        )
+        if (profile) {
+            res.send(profile)
+        } else {
+            const err = new Error(`Profile not found`);
+            err.httpStatusCode = 404;
+            next(error)
+        }
+    } catch (error) {
+        next(error)
+    }
+})
 router.delete("/:id", authenticateToken,async(req, res, next) => {
     try {
         const profile = await profileSchema.findByIdAndDelete(req.params.id);
