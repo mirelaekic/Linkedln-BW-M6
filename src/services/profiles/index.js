@@ -71,7 +71,7 @@ router.post("/me/picture", authenticateToken, async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const postProfile = new profileSchema(req.body);
+    const postProfile = new profileSchema({...req.body, experiences:[]});
     const { _id } = await postProfile.save();
     const username = req.body.username;
     const user = { name: username };

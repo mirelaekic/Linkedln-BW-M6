@@ -43,7 +43,7 @@ router.post("/", authenticateToken,async (req, res, next) => {
    
       const experience = new experienceSchema(req.body)
       const experienceToInsert = { ...experience.toObject()}
-      console.log(experience,experienceToInsert)
+      
   
       const updated = await experienceSchema.findByIdAndUpdate(
         req.params.uid,
@@ -54,18 +54,21 @@ router.post("/", authenticateToken,async (req, res, next) => {
         },
         { runValidators: true, new: true }
       )
+      console.log(updated)
       res.status(201).send(updated)
     } catch (error) {
+        console.log(error)
       next(error)
     }
   })
   
-router.get("/", authenticateToken,async (req, res, next) => {
+router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
-      const { experiences} = await profileSchema.findById(req.params.uid, {
-        experiences: 1,
-        _id: 0,
-      })
+       console.log(req.params.uid) 
+      const experiences = await profileSchema.findById(req.params.uid, {
+          _id:0,
+          experiences:1
+      } )
       res.send(experiences)
     } catch (error) {
       console.log(error)
@@ -74,13 +77,12 @@ router.get("/", authenticateToken,async (req, res, next) => {
   })
 
 
-//UPLOADING IMAGE TO CLOUDINARY
 
 
 
 
   
-  router.get("/:expId", async (req, res, next) => {
+  router.get("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const {experiences} = await profileSchema.findOne(
         {
