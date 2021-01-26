@@ -17,8 +17,19 @@ Generates and download a PDF with the CV of the user (details, picture, experien
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const profileSchema = require("./mongo");
-const experienceSchema = require("../experience/schema");
-const {cloudinary} = require("../../../utils/cloudinary");
+const cloudinary = require("../../utils/cloudinary");
+const multer = require("multer")
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
+const cloudStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+      folder: "linkedln"
+  }
+})
+const cloudMulter =  multer({ storage: cloudStorage})
+//const fs = require("fs");
+//const experienceSchema = require("../experience");
+//const postSchema = require("../posts");
 const router = express.Router();
 require("dotenv/config");
 
@@ -46,17 +57,25 @@ router.get("/", authenticateToken, async (req, res, next) => {
 })
 
 router.get("/me", authenticateToken, async (req, res, next) => {
-	try {
-		const profiles = await profileSchema.find()
-		const resp = res.json(
-			profiles.filter((profile) => profile.username === req.user.name)
-		)
-		res.send(resp)
-	} catch (error) {
-		next(error)
-	}
-})
-
+  try {
+    const profiles = await profileSchema.find();
+    const resp = res.json(
+      profiles.filter((profile) => profile.username === req.user.name)
+    );
+    res.send(resp);
+  } catch (error) {
+    next(error);
+  }
+});
+router.post("/:id/picture", authenticateToken, cloudMulter.single("image"), async (req, res, next) => {
+  console.log("req file",req.file.path)
+    try {
+      const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file.path },{ runValidators: true, new: true });
+      res.status(201).send(uploadImage)
+    } catch (error) {
+        next(error)
+    }
+});
 router.post("/", async (req, res, next) => {
 	try {
 		const postProfile = new profileSchema(req.body)

@@ -39,8 +39,7 @@ area: {
     type:String,
 },
 image: {
-    Data:Buffer,
-    contentType: String
+    Data: String
 },
 username: {
     type:String,

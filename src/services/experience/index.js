@@ -24,7 +24,7 @@ const multer = require("multer")
 const authenticateToken = require("../../authentication")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../../../utils/cloudinary")
+const cloudinary = require("../../utils/cloudinary")
 
 const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
