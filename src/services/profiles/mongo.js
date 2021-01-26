@@ -20,7 +20,7 @@ name: {
     type:String,
     required:true
 },
-surname: {
+surname: {  
     type:String,
     required:true
 },
@@ -39,7 +39,8 @@ area: {
     type:String,
 },
 image: {
-    type:String
+    Data:Buffer,
+    contentType: String
 },
 username: {
     type:String,
