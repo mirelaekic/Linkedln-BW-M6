@@ -37,10 +37,6 @@ function authenticateToken(req, res, next) {
         next()
     })
 }
-/*server.use(multer({dest: profileRouter, 
-rename:function(filedname,filename){
-    return filename
-}}))*/
 server.use("/profile", profileRouter);
 //server.use("/post", authetnicateToken, postsRouter);
 //server.use("/experience", authetnicateToken, experienceRouter);

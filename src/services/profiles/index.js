@@ -16,6 +16,7 @@ Generates and download a PDF with the CV of the user (details, picture, experien
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const profileSchema = require("./mongo");
+const {cloudinary} = require("../../../utils/cloudinary");
 //const fs = require("fs");
 //const experienceSchema = require("../experience");
 //const postSchema = require("../posts");
@@ -37,7 +38,6 @@ function authenticateToken(req, res, next) {
 router.get("/", authenticateToken, async (req, res, next) => {
   try {
     const profiles = await profileSchema.find();
-    ///const resp = res.json(profiles.filter(profile => profile.username === req.user.name))
     res.send(profiles);
   } catch (error) {
     next(error);
@@ -55,10 +55,19 @@ router.get("/me", authenticateToken, async (req, res, next) => {
     next(error);
   }
 });
-/**router.post("/:id/picture", authenticateToken, async (req, res, next) => {
-    const postPic = await profileSchema.findById(req.params.id)
-    
-    })*/
+router.post("/me/picture", authenticateToken, async (req, res, next) => {
+    try {
+        const fileStr = req.body.data;
+        const uploadedResp = await cloudinary.uploader.upload(fileStr, {
+            upload_preset:"dev_setups"
+        })
+        console.log(uploadedResp)
+        res.json({msg: "image uploaded"})
+    } catch (error) {
+        next(error)
+    }
+})
+
 router.post("/", async (req, res, next) => {
   try {
     const postProfile = new profileSchema(req.body);
