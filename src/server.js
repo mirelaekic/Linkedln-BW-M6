@@ -27,17 +27,17 @@ server.use(cors())
 server.use("/profile", profileRouter)
 server.use("/post", postsRouter)
 server.use("/profile/:uid/experience", experienceRouter);
-
+server.use("/experience", experienceRouter);
 function authenticateToken(req, res, next) {
-	const authHeader = req.headers["authorization"]
-	const token = authHeader && authHeader.split(" ")[1]
-	if (token == null) return res.sendStatus(401)
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    if(token == null) return res.sendStatus(401)
 
-	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-		if (err) return res.sendStatus(403)
-		req.user = user
-		next()
-	})
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, (err,user) => {
+        if(err) return res.sendStatus(403)
+        req.user = user
+        next()
+    })
 }
 
 server.use(badRequestHandler)
@@ -45,7 +45,6 @@ server.use(notFoundHandler)
 server.use(genericErrorHandler)
 
 console.log(listEndpoints(server))
-console.log(process.env.MONGO_CONNECTION)
 
 mongoose
 	.connect(process.env.MONGO_CONNECTION, {
