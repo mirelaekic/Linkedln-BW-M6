@@ -27,20 +27,31 @@ POSTS:
 Retrieve posts
 - POST https://yourapi.herokuapp.com/api/posts/	ok
 Creates a new post
-- GET https://yourapi.herokuapp.com/api/posts/{postId}
+- GET https://yourapi.herokuapp.com/api/posts/{postId} ok
 Retrieves the specified post
 - PUT https://yourapi.herokuapp.com/api/posts/{postId}	ok
 Edit a given post
-- DELETE https://yourapi.herokuapp.com/api/posts/{postId}	
+- DELETE https://yourapi.herokuapp.com/api/posts/{postId} ok
 Removes a post
 - POST https://yourapi.herokuapp.com/api/posts/{postId}
 Add an image to the post under the name of "post"
 
-#EXTRA: Find a way to return also the user with the posts, in order to have the Name / Picture to show it correcly on the frontend
+#EXTRA: Find a way to return also the user with the posts, in order to have the Name / Picture to show it correcly on the frontend ok
 */
+require("dotenv").config()
 const express = require("express")
 const mongoose = require("mongoose")
 const q2m = require("query-to-mongo")
+const multer = require("multer")
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
+const cloudinary = require("../../../utils/cloudinary")
+const cloudStorage = new CloudinaryStorage({
+	cloudinary: cloudinary,
+	params: {
+		folder: "linkedin/post",
+	},
+})
+const cloudMulter = multer({ storage: cloudStorage })
 const PostSchema = require("./schema")
 const profileSchema = require("../profiles/mongo")
 const PostRouter = express.Router()
@@ -58,8 +69,14 @@ PostRouter.get("/", authenticateToken, async (req, res, next) => {
 
 PostRouter.get("/:id", authenticateToken, async (req, res, next) => {
 	try {
-		const post = ""
-		res.send(post)
+		const post = await PostSchema.findById(req.params.id)
+		if (post) {
+			res.send(post)
+		} else {
+			const error = new Error(`Post with id ${req.params.id} not found`)
+			error.httpStatusCode = 404
+			next(error)
+		}
 	} catch (error) {
 		return next(error)
 	}
@@ -90,9 +107,6 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 			_id: 0,
 			userName: 1,
 		})
-		//	.userName
-		console.log(author)
-		console.log(req.user)
 		if (author.userName !== req.user.name) {
 			const error = new Error(
 				`User does not own the Post with id ${req.params.id}`
@@ -116,21 +130,71 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 	}
 })
 
-PostRouter.delete("/:id", async (req, res, next) => {
+/**
+ * this is for the image upload
+ */
+PostRouter.post("/:id", cloudMulter.single("image"), async (req, res, next) => {
 	try {
-		const author = await PostSchema.findById(req.params.id, { username: 1 })
-		if (author !== req.user.name) {
+		console.log("help")
+		return res.json({ body: req.body, file: req.file })
+		/*	const post = { ...req.body }
+			const author = await PostSchema.findById(req.params.id, {
+				_id: 0,
+				userName: 1,
+			})
+			if (author.userName !== req.user.name) {
+				const error = new Error(
+					`User does not own the Post with id ${req.params.id}`
+				)
+				error.httpStatusCode = 403
+				return next(error)
+			}
+			console.log(req.body)
+			console.log(req.file.buffer)
+			console.log("help")
+			const fileStr = req.body.data
+			/*const uploadedResp = await cloudinary.uploader.upload(fileStr, {
+				upload_preset: "dev_setups",
+			})
+			console.log(uploadedResp)
+			console.log({ body: req.body, file: req.file })
+
+			res.json({ msg: "image uploaded" })
+
+			/*const newPost = await PostSchema.findByIdAndUpdate(req.params.id, post, {
+			runValidators: true,
+			new: true,
+		})
+		if (newPost) {
+			res.status(201).send(post)
+		} else {
+			const error = new Error(`Post with id ${req.params.id} not found`)
+			error.httpStatusCode = 404
+			next(error)
+		}*/
+	} catch (error) {
+		next(error)
+	}
+})
+
+PostRouter.delete("/:id", authenticateToken, async (req, res, next) => {
+	try {
+		const author = await PostSchema.findById(req.params.id, {
+			_id: 0,
+			userName: 1,
+		})
+		if (author.userName !== req.user.name) {
 			const error = new Error(
 				`User does not own the Post with id ${req.params.id}`
 			)
 			error.httpStatusCode = 403
-			next(error)
+			return next(error)
 		}
 		const post = await PostSchema.findByIdAndDelete(req.params.id)
 		if (post) {
 			res.send("Deleted")
 		} else {
-			const error = new Error(`Service with id ${req.params.id} not found`)
+			const error = new Error(`Post with id ${req.params.id} not found`)
 			error.httpStatusCode = 404
 			next(error)
 		}
