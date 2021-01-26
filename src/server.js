@@ -24,6 +24,7 @@ server.use(express.json())
 
 server.use(cors())
 
+
 server.use("/profile", profileRouter)
 server.use("/post", postsRouter)
 //server.use("/experience", experienceRouter);
