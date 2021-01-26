@@ -133,11 +133,16 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 /**
  * this is for the image upload
  */
-PostRouter.post("/:id", cloudMulter.single("image"), async (req, res, next) => {
-	try {
-		console.log("help")
-		return res.json({ body: req.body, file: req.file })
-		/*	const post = { ...req.body }
+PostRouter.post(
+	"/:id",
+	authenticateToken,
+	cloudMulter.single("image"),
+	async (req, res, next) => {
+		try {
+			//res.send("ok")
+			console.log("help")
+			return res.json({ body: req.body, file: req.file })
+			/*	const post = { ...req.body }
 			const author = await PostSchema.findById(req.params.id, {
 				_id: 0,
 				userName: 1,
@@ -172,10 +177,12 @@ PostRouter.post("/:id", cloudMulter.single("image"), async (req, res, next) => {
 			error.httpStatusCode = 404
 			next(error)
 		}*/
-	} catch (error) {
-		next(error)
+		} catch (error) {
+			console.log("error", error)
+			next(error)
+		}
 	}
-})
+)
 
 PostRouter.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
