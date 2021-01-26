@@ -1,10 +1,11 @@
 const express = require("express");
 const cors  = require("cors");
 const { join } =  require("path");
-const mongoose = require("mongoose");
+const multer = require('multer');
+const jwt = require("jsonwebtoken");
 const listEndpoints = require("express-list-endpoints");
-
-//const profileRouter = require("./services/profiles");
+const mongoose = require("mongoose");
+const profileRouter = require("./services/profiles/index");
 //const postsRouter = require("./services/posts");
 //const experienceRouter = require("./services/experience");
 
@@ -25,9 +26,20 @@ server.use(express.json());
 
 server.use(cors());
 
-//server.use("/profile", profileRouter);
-//server.use("/post", postsRouter);
-//server.use("/experience", experienceRouter);
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    if(token == null) return res.sendStatus(401)
+
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, (err,user) => {
+        if(err) return res.sendStatus(403)
+        req.user = user
+        next()
+    })
+}
+server.use("/profile", profileRouter);
+//server.use("/post", authetnicateToken, postsRouter);
+//server.use("/experience", authetnicateToken, experienceRouter);
 
 server.use(badRequestHandler);
 server.use(notFoundHandler);
