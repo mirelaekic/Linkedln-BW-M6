@@ -59,5 +59,5 @@ const ExperienceSchema  = new Schema (
 )
 
 
-PostSchema.plugin(mongoosePaginate)
+ExperienceSchema.plugin(mongoosePaginate)
 module.exports = mongoose.model("Experience", ExperienceSchema)

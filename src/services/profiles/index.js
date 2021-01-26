@@ -16,6 +16,7 @@ Generates and download a PDF with the CV of the user (details, picture, experien
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const profileSchema = require("./mongo");
+const experienceSchema = require("../experience/schema");
 const {cloudinary} = require("../../../utils/cloudinary");
 //const fs = require("fs");
 //const experienceSchema = require("../experience");
@@ -121,5 +122,19 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
     next(error);
   }
 });
+
+
+// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
+//   try {
+//     const { experiences} = await profileSchema.findById(req.params.uid, {
+//       experiences: 1,
+//       _id: 0,
+//     })
+//     res.send(experiences)
+//   } catch (error) {
+//     console.log(error)
+//     next(error)
+//   }
+// })
 
 module.exports = router;

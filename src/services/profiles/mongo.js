@@ -46,6 +46,23 @@ username: {
     type:String,
     required:true
 },
+experiences:[{
+    role:String,
+        
+    company:String,
+
+    startDate:String,
+     
+    endDate:String,
+   
+    description:String,
+   
+    area: String,
+       
+    username:String,
+    
+    image:String}  
+]
 },{ timestamps: true }
 );
 ProfileSchema.plugin(mongoosePaginate)

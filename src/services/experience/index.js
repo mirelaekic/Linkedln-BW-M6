@@ -17,12 +17,14 @@
 
 const express = require("express");
 const experienceSchema = require("./schema");
-const reviewSchema = require("../reviews/schema");
+
+const profileSchema = require("../profiles/mongo");
 const mongoose = require("mongoose")
 const multer = require("multer")
+const authenticateToken = require("../../authentication")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../cloudinary")
+const cloudinary = require("../../../utils/cloudinary")
 
 const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -32,123 +34,186 @@ const cloudStorage = new CloudinaryStorage({
 })
 const cloudMulter =  multer({ storage: cloudStorage})
 
-const experiencesRouter = express.Router();
 
-///UPLOADING IMAGE TO CLOUDINARY
+const router = express.Router();
 
-experiencesRouter.post("/:id/image/upload", 
+
+router.post("/", authenticateToken,async (req, res, next) => {
+    try {
+   
+      const experience = new experienceSchema(req.body)
+      const experienceToInsert = { ...experience.toObject()}
+      console.log(experience,experienceToInsert)
+  
+      const updated = await experienceSchema.findByIdAndUpdate(
+        req.params.uid,
+        {
+          $push: {
+            experiences: experienceToInsert,
+          },
+        },
+        { runValidators: true, new: true }
+      )
+      res.status(201).send(updated)
+    } catch (error) {
+      next(error)
+    }
+  })
+  
+router.get("/", authenticateToken,async (req, res, next) => {
+    try {
+      const { experiences} = await profileSchema.findById(req.params.uid, {
+        experiences: 1,
+        _id: 0,
+      })
+      res.send(experiences)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  })
+
+
+//UPLOADING IMAGE TO CLOUDINARY
+
+
+
+
+  
+  router.get("/:expId", async (req, res, next) => {
+    try {
+      const {experiences} = await profileSchema.findOne(
+        {
+          _id: mongoose.Types.ObjectId(req.params.uid),
+        },
+        {
+          _id: 0,
+        experiences: {
+            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+          },
+        }
+      )
+  
+      if (experiences && experiences.length > 0) {
+        res.send(experiences[0])
+      } else {
+        const err = new Error("Profile or experience not found");
+        err.httpStatusCode = 404;
+        next(error);
+      }
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  })
+  
+  router.delete("/:expId", async (req, res, next) => {
+    try {
+      const modifiedexperience = await profileSchema.findByIdAndUpdate(
+        req.params.uid,
+        {
+          $pull: {
+            experiences: { _id: mongoose.Types.ObjectId(req.params.expId) },
+          },
+        },
+        {
+          new: true,
+        }
+      )
+      res.send(modifiedexperience)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  })
+  
+  router.put("/:expId", async (req, res, next) => {
+    try {
+      const { experiences} = await profileSchema.findOne(
+        {
+          _id: mongoose.Types.ObjectId(req.params.uid),
+        },
+        {
+          _id: 0,
+          experiences: {
+            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+          },
+        }
+      )
+  
+      if (experiences&& experiences.length > 0) {
+        const experienceToReplace = { ...experiences[0].toObject(), ...req.body }
+  
+        const modifiedexperience = await profileSchema.findOneAndUpdate(
+          {
+            _id: mongoose.Types.ObjectId(req.params.id),
+            "experiences._id": mongoose.Types.ObjectId(req.params.expId),
+          },
+          { $set: { "experiences.$": experienceToReplace } },
+          {
+            runValidators: true,
+            new: true,
+          }
+        )
+        res.send(modifiedexperience)
+      } else {
+        const err = new Error("Profile or experience not found");
+        err.httpStatusCode = 404;
+        next(error);
+      }
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  })
+
+router.post("/:expId/picture", 
 cloudMulter.single("image"), async (req, res, next) =>{
   console.log("req file",req.file.path)
   try{
-    
+    const { experiences} = await profileSchema.findOne(
+        {
+          _id: mongoose.Types.ObjectId(req.params.uid),
+        },
+        {
+          _id: 0,
+          experiences: {
+            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+          },
+        }
+      )
+  
+      if (experiences&& experiences.length > 0) {
+        const experienceToReplace = { ...experiences[0].toObject(), image:req.file.path }
+  
+        const modifiedexperience = await profileSchema.findOneAndUpdate(
+          {
+            _id: mongoose.Types.ObjectId(req.params.id),
+            "experiences._id": mongoose.Types.ObjectId(req.params.expId),
+          },
+          { $set: { "experiences.$": experienceToReplace } },
+          {
+            runValidators: true,
+            new: true,
+          }
+        )
+        res.status(201).send(modifiedexperience)
+  
+        } else {
+            const err = new Error("Profile or experience not found");
+            err.httpStatusCode = 404;
+            next(error);
+        }
      
-      const updated = await experienceSchema.findByIdAndUpdate(req.params.id, { image:req.file.path },
-        { runValidators: true, new: true }
-          )
-          res.status(201).send(updated)
         }
   catch(ex){
       console.log(ex)
       next(ex)
   }
 })
-
-experiencesRouter.get("/", async (req, res, next) => {
-  try {
-    const experiences = await experienceSchema.find();
-    res.send(experiences);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-
-experiencesRouter.get("/:id", async (req, res, next) => {
-  try {
-    const id = req.params.id
   
-    const experience = await experienceSchema.findById(id)
-    if (experience) {
-      res.send(experience)
-    } else {
-      const error = new Error()
-      error.httpStatusCode = 404
-      next(error)
-    }
-  } catch (error) {
-    console.log(error)
-    next("While reading experiences list a problem occurred!")
-  }
-})
 
 
 
 
-experiencesRouter.get("/category/:categoryName", async (req, res, next) => {
-  try {
-   // const categoryName= /^req.params.categoryName$/i
-
-  
-            const filteredexperiences = await  experienceSchema.find(
-            {
-                category: {$regex: new RegExp('^' + req.params.categoryName, 'i')}
-            }
-          )
-          res.send(filteredexperiences)
-        
- 
-  } catch (error) {
-    console.log(error)
-    next("While reading experiences list a problem occurred!")
-  }
-})
-
-experiencesRouter.post("/", async (req, res, next) => {
-  try {
-    const newexperience = new experienceSchema(req.body)
-    const { _id } = await newexperience.save()
-
-    res.status(201).send(_id)
-  } catch (error) {
-    next(error)
-  }
-})
-
-experiencesRouter.put("/:id", async (req, res, next) => {
-  try {
-    const experience = await experienceSchema.findByIdAndUpdate(req.params.id, req.body, {
-      runValidators: true,
-      new: true,
-    })
-    if (experience) {
-      res.send(experience)
-    } else {
-      const error = new Error(`experience with id ${req.params.id} not found`)
-      error.httpStatusCode = 404
-      next(error)
-    }
-  } catch (error) {
-    next(error)
-  }
-})
-
-experiencesRouter.delete("/:id", async (req, res, next) => {
-  try {
-    const experience = await experienceSchema.findByIdAndDelete(req.params.id)
-    if (experience) {
-      res.send("Deleted")
-    } else {
-      const error = new Error(`experience with id ${req.params.id} not found`)
-      error.httpStatusCode = 404
-      next(error)
-    }
-  } catch (error) {
-    next(error)
-  }
-})
-
-
-
-
-
-module.exports = experiencesRouter;
+module.exports = router;
