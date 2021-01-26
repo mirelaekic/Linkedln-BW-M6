@@ -23,15 +23,15 @@ POST Model:
 }
 
 POSTS:
-- GET https://yourapi.herokuapp.com/api/posts/
+- GET https://yourapi.herokuapp.com/api/posts/	ok
 Retrieve posts
-- POST https://yourapi.herokuapp.com/api/posts/
+- POST https://yourapi.herokuapp.com/api/posts/	ok
 Creates a new post
 - GET https://yourapi.herokuapp.com/api/posts/{postId}
 Retrieves the specified post
-- PUT https://yourapi.herokuapp.com/api/posts/{postId}
+- PUT https://yourapi.herokuapp.com/api/posts/{postId}	ok
 Edit a given post
-- DELETE https://yourapi.herokuapp.com/api/posts/{postId}
+- DELETE https://yourapi.herokuapp.com/api/posts/{postId}	
 Removes a post
 - POST https://yourapi.herokuapp.com/api/posts/{postId}
 Add an image to the post under the name of "post"
@@ -49,7 +49,7 @@ const authenticateToken = require("../../authentication")
 PostRouter.get("/", authenticateToken, async (req, res, next) => {
 	try {
 		const query = q2m(req.query)
-		const posts = await PostSchema.find({}).populate("profile")
+		const posts = await PostSchema.find({}).populate("user")
 		res.send(posts)
 	} catch (error) {
 		return next(error)
@@ -83,13 +83,31 @@ PostRouter.post("/", authenticateToken, async (req, res, next) => {
 	}
 })
 
-PostRouter.put("/:id", async (req, res, next) => {
+PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 	try {
-		const post = ""
-		if (post) {
-			res.send(post)
+		const post = { ...req.body }
+		const author = await PostSchema.findById(req.params.id, {
+			_id: 0,
+			userName: 1,
+		})
+		//	.userName
+		console.log(author)
+		console.log(req.user)
+		if (author.userName !== req.user.name) {
+			const error = new Error(
+				`User does not own the Post with id ${req.params.id}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
+		const newPost = await PostSchema.findByIdAndUpdate(req.params.id, post, {
+			runValidators: true,
+			new: true,
+		})
+		if (newPost) {
+			res.status(201).send(post)
 		} else {
-			const error = new Error(`Service with id ${req.params.id} not found`)
+			const error = new Error(`Post with id ${req.params.id} not found`)
 			error.httpStatusCode = 404
 			next(error)
 		}
@@ -100,7 +118,15 @@ PostRouter.put("/:id", async (req, res, next) => {
 
 PostRouter.delete("/:id", async (req, res, next) => {
 	try {
-		const post = ""
+		const author = await PostSchema.findById(req.params.id, { username: 1 })
+		if (author !== req.user.name) {
+			const error = new Error(
+				`User does not own the Post with id ${req.params.id}`
+			)
+			error.httpStatusCode = 403
+			next(error)
+		}
+		const post = await PostSchema.findByIdAndDelete(req.params.id)
 		if (post) {
 			res.send("Deleted")
 		} else {
