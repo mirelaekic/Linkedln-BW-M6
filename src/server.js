@@ -45,6 +45,7 @@ server.use(notFoundHandler)
 server.use(genericErrorHandler)
 
 console.log(listEndpoints(server))
+console.log(process.env.MONGO_CONNECTION)
 
 mongoose
 	.connect(process.env.MONGO_CONNECTION, {

@@ -1,5 +1,5 @@
 {
-  "name": "Linkedln-BW-M6",
+  "name": "LinkedIn-BW-M6",
   "version": "1.0.0",
   "description": "Linkedln API using MongoDB",
   "main": "server.js",
