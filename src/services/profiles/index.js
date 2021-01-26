@@ -55,6 +55,14 @@ router.get("/", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
+router.get("/:id",authenticateToken, async (req, res, next) => {
+  try {
+    const profile = await profileSchema.findById(req.params.id)
+    res.send(profile);
+  } catch (error) {
+    next(error)
+  }
+})
 
 router.get("/me", authenticateToken, async (req, res, next) => {
   try {
@@ -67,7 +75,7 @@ router.get("/me", authenticateToken, async (req, res, next) => {
     next(error);
   }
 });
-router.post("/:id/picture", authenticateToken, cloudMulter.single("image"), async (req, res, next) => {
+router.put("/:id/picture", authenticateToken, cloudMulter.single("image"), async (req, res, next) => {
   console.log("req file",req.file.path)
     try {
       const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file.path },{ runValidators: true, new: true });
