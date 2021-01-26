@@ -38,7 +38,7 @@ const cloudMulter =  multer({ storage: cloudStorage})
 const router = express.Router();
 
 
-router.post("/", authenticateToken,async (req, res, next) => {
+router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
    
       const experience = new experienceSchema(req.body)
@@ -78,9 +78,6 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
 
 
 
-
-
-
   
   router.get("/:uid/experience/:expId", async (req, res, next) => {
     try {
@@ -109,7 +106,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-  router.delete("/:expId", async (req, res, next) => {
+  router.delete("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const modifiedexperience = await profileSchema.findByIdAndUpdate(
         req.params.uid,
@@ -129,7 +126,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-  router.put("/:expId", async (req, res, next) => {
+  router.put("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const { experiences} = await profileSchema.findOne(
         {
@@ -169,7 +166,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
 
-router.post("/:expId/picture", 
+router.post("/:uid/experience/:expId/picture", 
 cloudMulter.single("image"), async (req, res, next) =>{
   console.log("req file",req.file.path)
   try{
