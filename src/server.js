@@ -5,7 +5,7 @@ const listEndpoints = require("express-list-endpoints")
 const mongoose = require("mongoose")
 const profileRouter = require("./services/profiles/index")
 const postsRouter = require("./services/posts")
-//const experienceRouter = require("./services/experience");
+const experienceRouter = require("./services/experience");
 
 require("dotenv/config")
 const {
@@ -26,7 +26,7 @@ server.use(cors())
 
 server.use("/profile", profileRouter)
 server.use("/post", postsRouter)
-//server.use("/experience", experienceRouter);
+server.use("/profile/:uid/experience", experienceRouter);
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
@@ -45,6 +45,7 @@ server.use(notFoundHandler)
 server.use(genericErrorHandler)
 
 console.log(listEndpoints(server))
+console.log(process.env.MONGO_CONNECTION)
 
 mongoose
 	.connect(process.env.MONGO_CONNECTION, {

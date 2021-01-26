@@ -13,11 +13,15 @@ Replace user profile picture (name = profile)
 - GET https://yourapi.herokuapp.com/api/profile/{userId}/CV
 Generates and download a PDF with the CV of the user (details, picture, experiences)
 */
-const express = require("express")
-const jwt = require("jsonwebtoken")
-const profileSchema = require("./mongo")
-const router = express.Router()
-require("dotenv/config")
+
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const profileSchema = require("./mongo");
+const experienceSchema = require("../experience/schema");
+const {cloudinary} = require("../../../utils/cloudinary");
+const router = express.Router();
+require("dotenv/config");
+
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
@@ -82,4 +86,19 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 	}
 })
 
-module.exports = router
+
+
+// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
+//   try {
+//     const { experiences} = await profileSchema.findById(req.params.uid, {
+//       experiences: 1,
+//       _id: 0,
+//     })
+//     res.send(experiences)
+//   } catch (error) {
+//     console.log(error)
+//     next(error)
+//   }
+// })
+
+module.exports = router;
