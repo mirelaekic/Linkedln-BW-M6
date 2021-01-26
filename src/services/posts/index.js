@@ -42,19 +42,21 @@ const express = require("express")
 const mongoose = require("mongoose")
 const q2m = require("query-to-mongo")
 const PostSchema = require("./schema")
+const profileSchema = require("../profiles/mongo")
 const PostRouter = express.Router()
+const authenticateToken = require("../../authentication")
 
-PostRouter.get("/", async (req, res, next) => {
+PostRouter.get("/", authenticateToken, async (req, res, next) => {
 	try {
 		const query = q2m(req.query)
-		const posts = ""
+		const posts = await PostSchema.find({}).populate("profile")
 		res.send(posts)
 	} catch (error) {
 		return next(error)
 	}
 })
 
-PostRouter.get("/:id", async (req, res, next) => {
+PostRouter.get("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const post = ""
 		res.send(post)
@@ -63,10 +65,18 @@ PostRouter.get("/:id", async (req, res, next) => {
 	}
 })
 
-PostRouter.post("/", async (req, res, next) => {
+PostRouter.post("/", authenticateToken, async (req, res, next) => {
 	try {
-		const newService = new PostSchema(req.body)
-		const { _id } = await newService.save()
+		const post = { ...req.body }
+		post.userName = req.user.name
+		post.user = await profileSchema.find(
+			{ username: post.userName },
+			{ _id: 1 }
+		)
+		post.user = post.user[0]._id
+		console.log(post)
+		const newPost = new PostSchema(post)
+		const { _id } = await newPost.save()
 		res.status(201).send(_id)
 	} catch (error) {
 		next(error)
