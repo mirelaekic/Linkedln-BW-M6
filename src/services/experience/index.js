@@ -45,7 +45,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
       const experienceToInsert = { ...experience.toObject()}
       
   
-      const updated = await experienceSchema.findByIdAndUpdate(
+      const updated = await profileSchema.findByIdAndUpdate(
         req.params.uid,
         {
           $push: {
@@ -77,9 +77,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
   })
 
 
-
-  
-  router.get("/:uid/experience/:expId", async (req, res, next) => {
+router.get("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const {experiences} = await profileSchema.findOne(
         {
@@ -106,7 +104,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-  router.delete("/:uid/experience/:expId", async (req, res, next) => {
+router.delete("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const modifiedexperience = await profileSchema.findByIdAndUpdate(
         req.params.uid,
@@ -126,7 +124,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-  router.put("/:uid/experience/:expId", async (req, res, next) => {
+router.put("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const { experiences} = await profileSchema.findOne(
         {
