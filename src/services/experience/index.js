@@ -31,7 +31,7 @@ const cloudStorage = new CloudinaryStorage({
   params: {
       folder: "linkedin"
   }
-})
+ })
 const cloudMulter =  multer({ storage: cloudStorage})
 
 
@@ -41,7 +41,7 @@ const router = express.Router();
 router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
    
-      const experience = new experienceSchema(req.body)
+      const experience = new experienceSchema({...req.body, image:""})
       const experienceToInsert = { ...experience.toObject()}
       
   
@@ -54,7 +54,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
         },
         { runValidators: true, new: true }
       )
-      console.log(updated)
+      
       res.status(201).send(updated)
     } catch (error) {
         console.log(error)
@@ -65,9 +65,9 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
 router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
        console.log(req.params.uid) 
-      const experiences = await profileSchema.findById(req.params.uid, {
-          _id:0,
-          experiences:1
+      const {experiences }= await profileSchema.findById(req.params.uid, {
+        experiences: 1,
+        _id: 0,
       } )
       res.send(experiences)
     } catch (error) {
@@ -138,8 +138,11 @@ router.put("/:uid/experience/:expId", async (req, res, next) => {
         }
       )
   
-      if (experiences&& experiences.length > 0) {
+      if (experiences && experiences.length > 0) {
+     
+
         const experienceToReplace = { ...experiences[0].toObject(), ...req.body }
+        console.log(experienceToReplace)
   
         const modifiedexperience = await profileSchema.findOneAndUpdate(
           {
@@ -181,6 +184,7 @@ cloudMulter.single("image"), async (req, res, next) =>{
       )
   
       if (experiences&& experiences.length > 0) {
+          console.log(experiences)
         const experienceToReplace = { ...experiences[0].toObject(), image:req.file.path }
   
         const modifiedexperience = await profileSchema.findOneAndUpdate(
@@ -188,7 +192,7 @@ cloudMulter.single("image"), async (req, res, next) =>{
             _id: mongoose.Types.ObjectId(req.params.id),
             "experiences._id": mongoose.Types.ObjectId(req.params.expId),
           },
-          { $set: { "experiences.$": experienceToReplace } },
+          { $set:{"experiences.$":experienceToReplace } },
           {
             runValidators: true,
             new: true,
