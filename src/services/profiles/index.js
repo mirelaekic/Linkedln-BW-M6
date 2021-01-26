@@ -85,19 +85,44 @@ router.put("/:id/picture", authenticateToken, cloudMulter.single("image"), async
     }
 });
 router.post("/", async (req, res, next) => {
-	try {
-		const postProfile = new profileSchema(req.body)
-		const { _id } = await postProfile.save()
-		const username = req.body.username
-		const user = { name: username }
-		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
-		res.json({ accessToken: accessToken })
-		res.status(201).send(_id)
-	} catch (error) {
-		next(error)
-	}
-})
-
+  try {
+    const postProfile = new profileSchema({...req.body, experiences:[]});
+    const { _id } = await postProfile.save();
+    const username = req.body.username;
+    const user = { name: username };
+    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+    res.json({ accessToken: accessToken });
+    res.status(201).send(_id);
+  } catch (error) {
+    next(error);
+  }
+});
+router.get("/:id", authenticateToken, async (req, res, next) => {
+  try {
+    const profile = await profileSchema.findById(req.params.id);
+    res.send(profile);
+  } catch (error) {
+    next(error);
+  }
+});
+router.put("/:id", authenticateToken, async (req, res, next) => {
+  try {
+    const profile = await profileSchema.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { runValidators: true, new: true }
+    );
+    if (profile) {
+      res.send(profile);
+    } else {
+      const err = new Error("Profile not found");
+      err.httpStatusCode = 404;
+      next(error);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 router.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const profile = await profileSchema.findByIdAndDelete(req.params.id)
@@ -115,17 +140,6 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 
 
 
-// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
-//   try {
-//     const { experiences} = await profileSchema.findById(req.params.uid, {
-//       experiences: 1,
-//       _id: 0,
-//     })
-//     res.send(experiences)
-//   } catch (error) {
-//     console.log(error)
-//     next(error)
-//   }
-// })
+
 
 module.exports = router;
