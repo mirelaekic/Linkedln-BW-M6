@@ -113,17 +113,6 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 
 
 
-// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
-//   try {
-//     const { experiences} = await profileSchema.findById(req.params.uid, {
-//       experiences: 1,
-//       _id: 0,
-//     })
-//     res.send(experiences)
-//   } catch (error) {
-//     console.log(error)
-//     next(error)
-//   }
-// })
+
 
 module.exports = router;
