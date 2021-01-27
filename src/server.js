@@ -27,7 +27,7 @@ server.use(cors())
 server.use("/profile", profileRouter)
 server.use("/post", postsRouter)
 //server.use("/profile/:uid/experience", experienceRouter);
-server.use("/experience", authenticateToken, experienceRouter)
+server.use("/profile", experienceRouter)
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
 	const token = authHeader && authHeader.split(" ")[1]

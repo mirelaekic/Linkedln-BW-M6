@@ -59,7 +59,7 @@ router.get("/me", authenticateToken, async (req, res, next) => {
 	try {
 		const profiles = await profileSchema.find()
 		const resp = res.json(
-			profiles.filter((profile) => profile.username === req.user.name)
+			profiles.filter((profile) => profile.username === req.user.name)[0]
 		)
 		res.send(resp)
 	} catch (error) {
