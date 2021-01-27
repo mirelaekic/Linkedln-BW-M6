@@ -42,8 +42,7 @@ image: {
     Data: String
 },
 username: {
-    type:String,
-    required:true
+    type:String
 },
 experiences:[{
     role:String,
