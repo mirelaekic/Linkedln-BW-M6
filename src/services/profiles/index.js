@@ -138,9 +138,9 @@ router.put("/:id", authenticateToken, async (req, res, next) => {
 		const post = { ...req.body }
 		const author = await profileSchema.findById(req.params.id, {
 			_id: 0,
-			userName: 1,
+			username: 1,
 		})
-		if (author.userName !== req.user.name) {
+		if (author.username !== req.user.name) {
 			const error = new Error(
 				`Please do not try to change profile with ${req.params.id}`
 			)
@@ -166,9 +166,9 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const author = await profileSchema.findById(req.params.id, {
 			_id: 0,
-			userName: 1,
+			username: 1,
 		})
-		if (author.userName !== req.user.name) {
+		if (author.username !== req.user.name) {
 			const error = new Error(
 				`Please do not try to delete profile with ${req.params.id}`
 			)
