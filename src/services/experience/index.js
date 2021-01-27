@@ -21,7 +21,6 @@ const experienceSchema = require("./schema");
 const profileSchema = require("../profiles/mongo");
 const mongoose = require("mongoose")
 const multer = require("multer")
-const authenticateToken = require("../../authentication")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../../utils/cloudinary")
@@ -38,7 +37,7 @@ const cloudMulter =  multer({ storage: cloudStorage})
 const router = express.Router();
 
 
-router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
+router.post("/:uid/experience",async (req, res, next) => {
     try {
    
       const experience = new experienceSchema({...req.body, image:""})
@@ -62,7 +61,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
+router.get("/:uid/experience",async (req, res, next) => {
     try {
        console.log(req.params.uid) 
       const {experiences }= await profileSchema.findById(req.params.uid, {
@@ -77,7 +76,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
   })
 
 
-router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) => {
+router.get("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const {experiences} = await profileSchema.findOne(
         {
@@ -104,7 +103,7 @@ router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) =
     }
   })
   
-router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next) => {
+router.delete("/:uid/experience/:expId",async (req, res, next) => {
     try {
       const modifiedexperience = await profileSchema.findByIdAndUpdate(
         req.params.uid,
@@ -124,7 +123,7 @@ router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next
     }
   })
   
-router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) => {
+router.put("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const { experiences} = await profileSchema.findOne(
         {
