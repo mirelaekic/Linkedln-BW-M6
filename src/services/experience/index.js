@@ -137,19 +137,20 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
           },
         }
       )
+     
   
       if (experiences && experiences.length > 0) {
      
 
         const experienceToReplace = { ...experiences[0].toObject(), ...req.body }
-        console.log(experienceToReplace)
+
   
         const modifiedexperience = await profileSchema.findOneAndUpdate(
           {
-            _id: mongoose.Types.ObjectId(req.params.id),
-            "experiences._id": mongoose.Types.ObjectId(req.params.expId),
+            _id: mongoose.Types.ObjectId(req.params.uid),
+           "experiences._id": mongoose.Types.ObjectId(req.params.expId),
           },
-          { $set: { "experiences.$": experienceToReplace } },
+          { $set: { "experiences.$":experienceToReplace }},
           {
             runValidators: true,
             new: true,
@@ -168,28 +169,32 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
   })
 
 router.post("/:uid/experience/:expId/picture", 
-cloudMulter.single("image"), authenticateToken, async (req, res, next) =>{
+cloudMulter.single("image"),  async (req, res, next) =>{
   console.log("req file",req.file.path)
+
   try{
+   
     const { experiences} = await profileSchema.findOne(
-        {
-          _id: mongoose.Types.ObjectId(req.params.uid),
+      {
+        _id: mongoose.Types.ObjectId(req.params.uid),
+      },
+      {
+        _id: 0,
+        experiences: {
+          $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
         },
-        {
-          _id: 0,
-          experiences: {
-            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
-          },
-        }
-      )
+      }
+    )
   
-      if (experiences&& experiences.length > 0) {
-          console.log(experiences)
-        const experienceToReplace = { ...experiences[0].toObject(), image:req.file.path }
-  
+
+    if (experiences && experiences.length > 0) {
+   
+
+      const experienceToReplace = { ...experiences[0].toObject(), image:req.file.path }
+    
         const modifiedexperience = await profileSchema.findOneAndUpdate(
           {
-            _id: mongoose.Types.ObjectId(req.params.id),
+            _id: mongoose.Types.ObjectId(req.params.uid),
             "experiences._id": mongoose.Types.ObjectId(req.params.expId),
           },
           { $set:{"experiences.$":experienceToReplace } },
@@ -199,13 +204,12 @@ cloudMulter.single("image"), authenticateToken, async (req, res, next) =>{
           }
         )
         res.status(201).send(modifiedexperience)
+      } else {
+        const err = new Error("Profile or experience not found");
+        err.httpStatusCode = 404;
+        next(error);
+      }
   
-        } else {
-            const err = new Error("Profile or experience not found");
-            err.httpStatusCode = 404;
-            next(error);
-        }
-     
         }
   catch(ex){
       console.log(ex)
