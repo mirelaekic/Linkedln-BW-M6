@@ -44,7 +44,7 @@ const mongoose = require("mongoose")
 const q2m = require("query-to-mongo")
 const multer = require("multer")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../../utils/cloudinary")
+const { cloudinary } = require("../../utils/cloudinary")
 const cloudStorage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
