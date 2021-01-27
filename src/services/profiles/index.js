@@ -66,7 +66,24 @@ router.get("/me", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
-
+router.post("/", async (req, res, next) => {
+	try {
+		const postProfile = new profileSchema({
+			...req.body,
+			username: req.body.email,
+			experiences: [],
+		})
+		const { _id } = await postProfile.save()
+		const username = req.body.email //req.body.username
+		console.log("username", username)
+		const user = { name: username }
+		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+		res.json({ accessToken: accessToken })
+		res.status(201).send(_id)
+	} catch (error) {
+		next(error)
+	}
+})
 router.get("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const profile = await profileSchema.findById(req.params.id)
@@ -92,25 +109,6 @@ router.put(
 		}
 	}
 )
-router.post("/", async (req, res, next) => {
-	try {
-		const postProfile = new profileSchema({
-			...req.body,
-			username: req.body.email,
-			experiences: [],
-		})
-		const { _id } = await postProfile.save()
-		const username = req.body.email //req.body.username
-		console.log("username", username)
-		const user = { name: username }
-		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
-		res.json({ accessToken: accessToken })
-		res.status(201).send(_id)
-	} catch (error) {
-		next(error)
-	}
-})
-
 router.get("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const profile = await profileSchema.findById(req.params.id)
