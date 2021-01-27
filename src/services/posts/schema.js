@@ -42,6 +42,7 @@ const PostSchema = new Schema(
 			ref: "Profile",
 			required: true,
 		},
+		imageUrl: String,
 	},
 	{ timestamps: true }
 )

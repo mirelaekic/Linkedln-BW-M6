@@ -33,7 +33,7 @@ Retrieves the specified post
 Edit a given post
 - DELETE https://yourapi.herokuapp.com/api/posts/{postId} ok
 Removes a post
-- POST https://yourapi.herokuapp.com/api/posts/{postId}
+- POST https://yourapi.herokuapp.com/api/posts/{postId} ok
 Add an image to the post under the name of "post"
 
 #EXTRA: Find a way to return also the user with the posts, in order to have the Name / Picture to show it correcly on the frontend ok
@@ -51,6 +51,7 @@ const cloudStorage = new CloudinaryStorage({
 		folder: "linkedin/post",
 	},
 })
+
 const cloudMulter = multer({ storage: cloudStorage })
 const PostSchema = require("./schema")
 const profileSchema = require("../profiles/mongo")
@@ -84,7 +85,7 @@ PostRouter.get("/:id", authenticateToken, async (req, res, next) => {
 
 PostRouter.post("/", authenticateToken, async (req, res, next) => {
 	try {
-		const post = { ...req.body }
+		const post = { ...req.body, image: "" }
 		post.userName = req.user.name
 		post.user = await profileSchema.find(
 			{ username: post.userName },
@@ -133,11 +134,13 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 /**
  * this is for the image upload
  */
-PostRouter.post("/:id", cloudMulter.single("image"), async (req, res, next) => {
-	try {
-		console.log("help")
-		return res.json({ body: req.body, file: req.file })
-		/*	const post = { ...req.body }
+PostRouter.post(
+	"/:id",
+	authenticateToken,
+	cloudMulter.single("image"),
+	async (req, res, next) => {
+		try {
+			const post = { imageUrl: req.file.path }
 			const author = await PostSchema.findById(req.params.id, {
 				_id: 0,
 				userName: 1,
@@ -152,30 +155,25 @@ PostRouter.post("/:id", cloudMulter.single("image"), async (req, res, next) => {
 			console.log(req.body)
 			console.log(req.file.buffer)
 			console.log("help")
-			const fileStr = req.body.data
-			/*const uploadedResp = await cloudinary.uploader.upload(fileStr, {
-				upload_preset: "dev_setups",
+			//res.json({ msg: "image uploaded" })
+
+			const newPost = await PostSchema.findByIdAndUpdate(req.params.id, post, {
+				runValidators: true,
+				new: true,
 			})
-			console.log(uploadedResp)
-			console.log({ body: req.body, file: req.file })
-
-			res.json({ msg: "image uploaded" })
-
-			/*const newPost = await PostSchema.findByIdAndUpdate(req.params.id, post, {
-			runValidators: true,
-			new: true,
-		})
-		if (newPost) {
-			res.status(201).send(post)
-		} else {
-			const error = new Error(`Post with id ${req.params.id} not found`)
-			error.httpStatusCode = 404
+			if (newPost) {
+				res.status(201).send("immage updated")
+			} else {
+				const error = new Error(`Post with id ${req.params.id} not found`)
+				error.httpStatusCode = 404
+				next(error)
+			}
+		} catch (error) {
+			console.log("error", error)
 			next(error)
-		}*/
-	} catch (error) {
-		next(error)
+		}
 	}
-})
+)
 
 PostRouter.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {

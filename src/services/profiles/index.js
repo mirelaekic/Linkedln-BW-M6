@@ -14,25 +14,24 @@ Replace user profile picture (name = profile)
 Generates and download a PDF with the CV of the user (details, picture, experiences)
 */
 
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const profileSchema = require("./mongo");
-const cloudinary = require("../../utils/cloudinary");
+const express = require("express")
+const jwt = require("jsonwebtoken")
+const profileSchema = require("./mongo")
 const multer = require("multer")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
+const { cloudinary } = require("../../utils/cloudinary")
 const cloudStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-      folder: "linkedln"
-  }
+	cloudinary: cloudinary,
+	params: {
+		folder: "linkedln",
+	},
 })
-const cloudMulter =  multer({ storage: cloudStorage})
+const cloudMulter = multer({ storage: cloudStorage })
 //const fs = require("fs");
 //const experienceSchema = require("../experience");
 //const postSchema = require("../posts");
-const router = express.Router();
-require("dotenv/config");
-
+const router = express.Router()
+require("dotenv/config")
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
@@ -55,76 +54,112 @@ router.get("/", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
-router.get("/:id",authenticateToken, async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findById(req.params.id)
-    res.send(profile);
-  } catch (error) {
-    next(error)
-  }
-})
 
 router.get("/me", authenticateToken, async (req, res, next) => {
-  try {
-    const profiles = await profileSchema.find();
-    const resp = res.json(
-      profiles.filter((profile) => profile.username === req.user.name)
-    );
-    res.send(resp);
-  } catch (error) {
-    next(error);
-  }
-});
-router.put("/:id/picture", authenticateToken, cloudMulter.single("image"), async (req, res, next) => {
-  console.log("req file",req.file.path)
-    try {
-      const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file.path },{ runValidators: true, new: true });
-      res.status(201).send(uploadImage)
-    } catch (error) {
-        next(error)
-    }
-});
+	try {
+		const profiles = await profileSchema.find()
+		const resp = res.json(
+			profiles.filter((profile) => profile.username === req.user.name)
+		)
+		res.send(resp)
+	} catch (error) {
+		next(error)
+	}
+})
 router.post("/", async (req, res, next) => {
-  try {
-    const postProfile = new profileSchema({...req.body, experiences:[]});
-    const { _id } = await postProfile.save();
-    const username = req.body.email;
-    const user = { name: username };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-    res.json({ accessToken: accessToken });
-    res.status(201).send(_id);
-  } catch (error) {
-    next(error);
-  }
-});
+	try {
+		const postProfile = new profileSchema({
+			...req.body,
+			username: req.body.email,
+			experiences: [],
+		})
+		const { _id } = await postProfile.save()
+		const username = req.body.email //req.body.username
+		console.log("username", username)
+		const user = { name: username }
+		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+		res.json({ accessToken: accessToken })
+		res.status(201).send(_id)
+	} catch (error) {
+		next(error)
+	}
+})
 router.get("/:id", authenticateToken, async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findById(req.params.id);
-    res.send(profile);
-  } catch (error) {
-    next(error);
-  }
-});
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		res.send(profile)
+	} catch (error) {
+		next(error)
+	}
+})
+
+router.put(
+	"/:id/picture",
+	authenticateToken,
+	cloudMulter.single("image"),
+	async (req, res, next) => {
+		try {
+			console.log("**************** I M G ****************")
+			return res.json({ body: req.body, file: req.file })
+			//security code
+			//const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file },{ runValidators: true, new: true });
+			//res.status(201).send(uploadImage)
+		} catch (error) {
+			next(error)
+		}
+	}
+)
+router.get("/:id", authenticateToken, async (req, res, next) => {
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		res.send(profile)
+	} catch (error) {
+		next(error)
+	}
+})
+
 router.put("/:id", authenticateToken, async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { runValidators: true, new: true }
-    );
-    if (profile) {
-      res.send(profile);
-    } else {
-      const err = new Error("Profile not found");
-      err.httpStatusCode = 404;
-      next(error);
-    }
-  } catch (error) {
-    next(error);
-  }
-});
+	try {
+		const post = { ...req.body }
+		const author = await profileSchema.findById(req.params.id, {
+			_id: 0,
+			userName: 1,
+		})
+		if (author.userName !== req.user.name) {
+			const error = new Error(
+				`Please do not try to change profile with ${req.params.id}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
+		const profile = await profileSchema.findByIdAndUpdate(req.params.id, post, {
+			runValidators: true,
+			new: true,
+		})
+		if (profile) {
+			res.send(profile)
+		} else {
+			const err = new Error("Profile not found")
+			err.httpStatusCode = 404
+			next(error)
+		}
+	} catch (error) {
+		next(error)
+	}
+})
 router.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
+		const author = await profileSchema.findById(req.params.id, {
+			_id: 0,
+			userName: 1,
+		})
+		if (author.userName !== req.user.name) {
+			const error = new Error(
+				`Please do not try to delete profile with ${req.params.id}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
 		const profile = await profileSchema.findByIdAndDelete(req.params.id)
 		if (profile) {
 			res.send("deleted")
@@ -138,8 +173,17 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 	}
 })
 
+// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
+//   try {
+//     const { experiences} = await profileSchema.findById(req.params.uid, {
+//       experiences: 1,
+//       _id: 0,
+//     })
+//     res.send(experiences)
+//   } catch (error) {
+//     console.log(error)
+//     next(error)
+//   }
+// })
 
-
-
-
-module.exports = router;
+module.exports = router
