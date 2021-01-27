@@ -6,7 +6,7 @@ const mongoose = require("mongoose")
 const profileRouter = require("./services/profiles/index")
 const postsRouter = require("./services/posts")
 const experienceRouter = require("./services/experience")
-
+const jwt = require("jsonwebtoken")
 require("dotenv/config")
 const {
 	notFoundHandler,

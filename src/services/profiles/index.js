@@ -27,9 +27,6 @@ const cloudStorage = new CloudinaryStorage({
 	},
 })
 const cloudMulter = multer({ storage: cloudStorage })
-//const fs = require("fs");
-//const experienceSchema = require("../experience");
-//const postSchema = require("../posts");
 const router = express.Router()
 require("dotenv/config")
 
@@ -48,7 +45,6 @@ function authenticateToken(req, res, next) {
 router.get("/", authenticateToken, async (req, res, next) => {
 	try {
 		const profiles = await profileSchema.find()
-		//const resp = res.json(profiles.filter(profile => profile.username === req.user.name))
 		res.send(profiles)
 	} catch (error) {
 		next(error)
@@ -59,7 +55,7 @@ router.get("/me", authenticateToken, async (req, res, next) => {
 	try {
 		const profiles = await profileSchema.find()
 		const resp = res.json(
-			profiles.filter((profile) => profile.username === req.user.name)
+			profiles.filter((profile) => profile.username === req.user.name)[0]
 		)
 		res.send(resp)
 	} catch (error) {
@@ -93,18 +89,37 @@ router.get("/:id", authenticateToken, async (req, res, next) => {
 	}
 })
 
-router.put(
-	"/:id/picture",
+router.post(
+	"/upload/:id",
 	authenticateToken,
 	cloudMulter.single("image"),
 	async (req, res, next) => {
 		try {
-			console.log("**************** I M G ****************")
-			return res.json({ body: req.body, file: req.file })
-			//security code
-			//const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file },{ runValidators: true, new: true });
-			//res.status(201).send(uploadImage)
+			const image = { image: req.file.path }
+			const profile = await profileSchema.findById(req.params.id, {
+				_id: 0,
+				username: 1,
+			})
+			if (profile.username !== req.user.name) {
+				const error = new Error(
+					`User does not own the Post with id ${req.params.id}`
+				)
+				error.httpStatusCode = 403
+				return next(error)
+			}
+			const newImg = await profileSchema.findByIdAndUpdate(req.params.id, image, {
+				runValidators: true,
+				new: true,
+			})
+			if (newImg) {
+				res.status(201).send("image uploaded")
+			} else {
+				const error = new Error(`Profile with id ${req.params.id} not found`)
+				error.httpStatusCode = 404
+				next(error)
+			}
 		} catch (error) {
+			console.log("error", error)
 			next(error)
 		}
 	}
@@ -123,9 +138,9 @@ router.put("/:id", authenticateToken, async (req, res, next) => {
 		const post = { ...req.body }
 		const author = await profileSchema.findById(req.params.id, {
 			_id: 0,
-			userName: 1,
+			username: 1,
 		})
-		if (author.userName !== req.user.name) {
+		if (author.username !== req.user.name) {
 			const error = new Error(
 				`Please do not try to change profile with ${req.params.id}`
 			)
@@ -151,9 +166,9 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const author = await profileSchema.findById(req.params.id, {
 			_id: 0,
-			userName: 1,
+			username: 1,
 		})
-		if (author.userName !== req.user.name) {
+		if (author.username !== req.user.name) {
 			const error = new Error(
 				`Please do not try to delete profile with ${req.params.id}`
 			)
@@ -172,18 +187,4 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
-
-// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
-//   try {
-//     const { experiences} = await profileSchema.findById(req.params.uid, {
-//       experiences: 1,
-//       _id: 0,
-//     })
-//     res.send(experiences)
-//   } catch (error) {
-//     console.log(error)
-//     next(error)
-//   }
-// })
-
 module.exports = router

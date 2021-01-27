@@ -1,4 +1,3 @@
-
 // EXPERIENCE:
 // - GET https://yourapi.herokuapp.com/api/profile/userName/experiences
 // Get user experiences
@@ -15,23 +14,18 @@
 // - POST https://yourapi.herokuapp.com/api/profile/userName/experiences/CSV
 // Download the experiences as a CSV
 
-const express = require("express");
-const experienceSchema = require("./schema");
+const express = require("express")
+const experienceSchema = require("./schema")
 
-const profileSchema = require("../profiles/mongo");
+const profileSchema = require("../profiles/mongo")
 const mongoose = require("mongoose")
 const multer = require("multer")
-const authenticateToken = require("../../authentication")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../../utils/cloudinary")
-const Json2csvParser = require('json2csv').Parser;
-const { Transform } = require("json2csv")
-const { pipeline } = require("stream")
-const { createReadStream } = require("fs-extra")
-const mongotocsv = require('mongo-to-csv');
+
 const { Parser } = require('json2csv');
-const { json } = require("express");
+
 
 const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
