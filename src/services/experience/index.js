@@ -25,6 +25,13 @@ const authenticateToken = require("../../authentication")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../../utils/cloudinary")
+const Json2csvParser = require('json2csv').Parser;
+const { Transform } = require("json2csv")
+const { pipeline } = require("stream")
+const { createReadStream } = require("fs-extra")
+const mongotocsv = require('mongo-to-csv');
+const { Parser } = require('json2csv');
+const { json } = require("express");
 
 const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -40,7 +47,19 @@ const router = express.Router();
 
 router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
-   
+      console.log(req.user.name)
+      const author = await profileSchema.findById(req.params.uid, {
+        _id: 0,
+        username: 1,
+      })
+      console.log(author.username)
+      if (author.username !== req.user.name) {
+        const error = new Error(
+          `Please do not try to change experience with ${req.params.uid}`
+        )
+        error.httpStatusCode = 403
+        return next(error)
+      }
       const experience = new experienceSchema({...req.body, image:""})
       const experienceToInsert = { ...experience.toObject()}
       
@@ -64,11 +83,12 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
   
 router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
     try {
-       console.log(req.params.uid) 
+       
       const {experiences }= await profileSchema.findById(req.params.uid, {
         experiences: 1,
         _id: 0,
       } )
+
       res.send(experiences)
     } catch (error) {
       console.log(error)
@@ -93,6 +113,7 @@ router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) =
   
       if (experiences && experiences.length > 0) {
         res.send(experiences[0])
+
       } else {
         const err = new Error("Profile or experience not found");
         err.httpStatusCode = 404;
@@ -106,6 +127,17 @@ router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) =
   
 router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next) => {
     try {
+      const author = await profileSchema.findById(req.params.uid, {
+        _id: 0,
+        username: 1,
+      })
+      if (author.username !== req.user.name) {
+        const error = new Error(
+          `Please do not try to change experience with ${req.params.uid}`
+        )
+        error.httpStatusCode = 403
+        return next(error)
+      }
       const modifiedexperience = await profileSchema.findByIdAndUpdate(
         req.params.uid,
         {
@@ -126,6 +158,18 @@ router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next
   
 router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) => {
     try {
+      const author = await profileSchema.findById(req.params.uid, {
+        _id: 0,
+        username: 1,
+      })
+      
+      if (author.username !== req.user.name) {
+        const error = new Error(
+          `Please do not try to change experience with ${req.params.uid}`
+        )
+        error.httpStatusCode = 403
+        return next(error)
+      }
       const { experiences} = await profileSchema.findOne(
         {
           _id: mongoose.Types.ObjectId(req.params.uid),
@@ -169,10 +213,22 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
   })
 
 router.post("/:uid/experience/:expId/picture", 
-cloudMulter.single("image"),  async (req, res, next) =>{
+cloudMulter.single("image"),authenticateToken,  async (req, res, next) =>{
   console.log("req file",req.file.path)
 
   try{
+    const author = await profileSchema.findById(req.params.uid, {
+      _id: 0,
+      username: 1,
+    })
+    console.log(author.username)
+    if (author.username !== req.user.name) {
+      const error = new Error(
+        `Please do not try to change experience with ${req.params.uid}`
+      )
+      error.httpStatusCode = 403
+      return next(error)
+    }
    
     const { experiences} = await profileSchema.findOne(
       {
@@ -216,9 +272,30 @@ cloudMulter.single("image"),  async (req, res, next) =>{
       next(ex)
   }
 })
+
+router.get("/:uid/ex/csv",authenticateToken,async (req, res, next) => {
+  try {
+    const {experiences }= await profileSchema.findById(req.params.uid, {
+      experiences: 1,
+      _id: 0,
+    } )
+    console.log(experiences)
+
+  const fields= ['_id', 'role', 'company', 'startDate','endDate','description','area','username','image']
+const json2csvParser = new Parser({fields});
+  const csv = json2csvParser.parse(experiences);
   
+console.log(csv);
 
+res.setHeader("Content-Disposition", "attachment; filename=export.csv")
+res.set("Content-Type", "text/csv")
+res.status(200).send(csv)
 
-
-
+ 
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+ })
+  
 module.exports = router;
