@@ -27,6 +27,8 @@ const cloudStorage = new CloudinaryStorage({
 	},
 })
 const cloudMulter = multer({ storage: cloudStorage })
+const puppeteer = require("puppeteer");
+const fs = require("fs-extra")
 const router = express.Router()
 require("dotenv/config")
 
@@ -41,7 +43,6 @@ function authenticateToken(req, res, next) {
 		next()
 	})
 }
-
 router.get("/", authenticateToken, async (req, res, next) => {
 	try {
 		const profiles = await profileSchema.find()
@@ -78,6 +79,41 @@ router.post("/", async (req, res, next) => {
 		res.status(201).send(_id)
 	} catch (error) {
 		next(error)
+	}
+})
+router.post("/cv/:id", async (req, res, next) => {
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		const browser = await puppeteer.launch();
+		const page = await browser.newPage();
+
+		await page.setContent(`
+		<article style="text-align:center;"> 
+		<h1>Linkedln Resume</h1>
+		<img src=${profile.image}  width="200" height="250">
+		<h2>About me</h2>
+		<h2>${profile.name} ${profile.surname}</h2>
+		<h2>${profile.email}</h2>
+		<h2>${profile.bio}</h2>
+		</article>
+		<h2>${profile.title}</h2>
+		<h2>${profile.area}</h2>
+		<h2>${profile.exp}</h2>
+		`);
+		await page.emulateMediaFeatures("screen")
+		
+		const pdf=await page.pdf({
+			//path:`${profile.name}${profile.surname}LinkedlnCV.pdf`,
+			format:"A4",
+			printBackground: true
+		})
+		console.log("done");
+		//await browser.close();
+		//process.exit();
+		res.contentType("application/pdf");
+        res.send(pdf)
+	} catch (error) {
+		console.log(error)
 	}
 })
 router.get("/:id", authenticateToken, async (req, res, next) => {
