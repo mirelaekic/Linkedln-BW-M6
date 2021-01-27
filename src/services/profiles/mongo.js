@@ -28,6 +28,7 @@ const ProfileSchema = new Schema(
 		email: {
 			type: String,
 			required: true,
+			unique: true,
 		},
 		bio: {
 			type: String,
@@ -44,7 +45,7 @@ const ProfileSchema = new Schema(
 		},
 		username: {
 			type: String,
-			required: true,
+			unique: true,
 		},
 		experiences: [
 			{
