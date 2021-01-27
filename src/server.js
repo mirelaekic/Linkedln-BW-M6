@@ -25,9 +25,9 @@ server.use(express.static(staticFolderPath))
 server.use(cors())
 
 server.use("/profile", profileRouter)
-server.use("/posts", postsRouter)
-//server.use("/profile/:uid/experience", experienceRouter);
-server.use("/profile", experienceRouter)
+server.use("/post", postsRouter)
+server.use("/profile",authenticateToken,experienceRouter)
+
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
 	const token = authHeader && authHeader.split(" ")[1]
