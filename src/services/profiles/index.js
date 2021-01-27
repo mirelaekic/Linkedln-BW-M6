@@ -19,7 +19,7 @@ const jwt = require("jsonwebtoken")
 const profileSchema = require("./mongo")
 const multer = require("multer")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const {cloudinary} = require("../../utils/cloudinary");
+const { cloudinary } = require("../../utils/cloudinary")
 const cloudStorage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
@@ -54,43 +54,50 @@ router.get("/", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
-router.get("/:id",authenticateToken, async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findById(req.params.id)
-    res.send(profile);
-  } catch (error) {
-    next(error)
-  }
-})
 
 router.get("/me", authenticateToken, async (req, res, next) => {
-  try {
-    const profiles = await profileSchema.find();
-    const resp = res.json(
-      profiles.filter((profile) => profile.username === req.user.name)
-    );
-    res.send(resp);
-  } catch (error) {
-    next(error);
-  }
-});
-router.put("/:id/picture", authenticateToken, cloudMulter.single("image"), async (req, res, next) => {
-  try {
-    console.log("**************** I M G ****************")
-		return res.json({ body: req.body, file: req.file })
-      //security code
-      //const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file },{ runValidators: true, new: true });
-      //res.status(201).send(uploadImage)
-    } catch (error) {
-        next(error)
-    }
-});
+	try {
+		const profiles = await profileSchema.find()
+		const resp = res.json(
+			profiles.filter((profile) => profile.username === req.user.name)
+		)
+		res.send(resp)
+	} catch (error) {
+		next(error)
+	}
+})
+
+router.get("/:id", authenticateToken, async (req, res, next) => {
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		res.send(profile)
+	} catch (error) {
+		next(error)
+	}
+})
+
+router.put(
+	"/:id/picture",
+	authenticateToken,
+	cloudMulter.single("image"),
+	async (req, res, next) => {
+		try {
+			console.log("**************** I M G ****************")
+			return res.json({ body: req.body, file: req.file })
+			//security code
+			//const uploadImage = await profileSchema.findByIdAndUpdate(req.params.id,{ image:req.file },{ runValidators: true, new: true });
+			//res.status(201).send(uploadImage)
+		} catch (error) {
+			next(error)
+		}
+	}
+)
 router.post("/", async (req, res, next) => {
 	try {
 		const postProfile = new profileSchema({
 			...req.body,
-      username: req.body.email,
-      experiences:[]
+			username: req.body.email,
+			experiences: [],
 		})
 		const { _id } = await postProfile.save()
 		const username = req.body.email //req.body.username
@@ -105,17 +112,17 @@ router.post("/", async (req, res, next) => {
 })
 
 router.get("/:id", authenticateToken, async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findById(req.params.id);
-    res.send(profile);
-  } catch (error) {
-    next(error);
-  }
-});
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		res.send(profile)
+	} catch (error) {
+		next(error)
+	}
+})
 
 router.put("/:id", authenticateToken, async (req, res, next) => {
-  try {
-    const post = { ...req.body }
+	try {
+		const post = { ...req.body }
 		const author = await profileSchema.findById(req.params.id, {
 			_id: 0,
 			userName: 1,
@@ -127,22 +134,21 @@ router.put("/:id", authenticateToken, async (req, res, next) => {
 			error.httpStatusCode = 403
 			return next(error)
 		}
-    const profile = await profileSchema.findByIdAndUpdate(
-      req.params.id,
-      post,
-      { runValidators: true, new: true }
-    );
-    if (profile) {
-      res.send(profile);
-    } else {
-      const err = new Error("Profile not found");
-      err.httpStatusCode = 404;
-      next(error);
-    }
-  } catch (error) {
-    next(error);
-  }
-});
+		const profile = await profileSchema.findByIdAndUpdate(req.params.id, post, {
+			runValidators: true,
+			new: true,
+		})
+		if (profile) {
+			res.send(profile)
+		} else {
+			const err = new Error("Profile not found")
+			err.httpStatusCode = 404
+			next(error)
+		}
+	} catch (error) {
+		next(error)
+	}
+})
 router.delete("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const author = await profileSchema.findById(req.params.id, {
