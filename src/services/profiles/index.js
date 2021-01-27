@@ -88,7 +88,7 @@ router.post("/", async (req, res, next) => {
   try {
     const postProfile = new profileSchema({...req.body, experiences:[]});
     const { _id } = await postProfile.save();
-    const username = req.body.username;
+    const username = req.body.email;
     const user = { name: username };
     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
     res.json({ accessToken: accessToken });

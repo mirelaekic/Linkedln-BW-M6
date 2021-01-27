@@ -77,7 +77,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
   })
 
 
-router.get("/:uid/experience/:expId", async (req, res, next) => {
+router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) => {
     try {
       const {experiences} = await profileSchema.findOne(
         {
@@ -104,7 +104,7 @@ router.get("/:uid/experience/:expId", async (req, res, next) => {
     }
   })
   
-router.delete("/:uid/experience/:expId", async (req, res, next) => {
+router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next) => {
     try {
       const modifiedexperience = await profileSchema.findByIdAndUpdate(
         req.params.uid,
@@ -124,7 +124,7 @@ router.delete("/:uid/experience/:expId", async (req, res, next) => {
     }
   })
   
-router.put("/:uid/experience/:expId", async (req, res, next) => {
+router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) => {
     try {
       const { experiences} = await profileSchema.findOne(
         {
@@ -168,7 +168,7 @@ router.put("/:uid/experience/:expId", async (req, res, next) => {
   })
 
 router.post("/:uid/experience/:expId/picture", 
-cloudMulter.single("image"), async (req, res, next) =>{
+cloudMulter.single("image"), authenticateToken, async (req, res, next) =>{
   console.log("req file",req.file.path)
   try{
     const { experiences} = await profileSchema.findOne(
