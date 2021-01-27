@@ -14,25 +14,24 @@ Replace user profile picture (name = profile)
 Generates and download a PDF with the CV of the user (details, picture, experiences)
 */
 
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const profileSchema = require("./mongo");
+const express = require("express")
+const jwt = require("jsonwebtoken")
+const profileSchema = require("./mongo")
 const multer = require("multer")
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const {cloudinary} = require("../../utils/cloudinary");
 const cloudStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-      folder: "linkedln"
-  }
+	cloudinary: cloudinary,
+	params: {
+		folder: "linkedln",
+	},
 })
-const cloudMulter =  multer({ storage: cloudStorage})
+const cloudMulter = multer({ storage: cloudStorage })
 //const fs = require("fs");
 //const experienceSchema = require("../experience");
 //const postSchema = require("../posts");
-const router = express.Router();
-require("dotenv/config");
-
+const router = express.Router()
+require("dotenv/config")
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]
@@ -87,18 +86,24 @@ router.put("/:id/picture", authenticateToken, cloudMulter.single("image"), async
     }
 });
 router.post("/", async (req, res, next) => {
-  try {
-    const postProfile = new profileSchema({...req.body, experiences:[]});
-    const { _id } = await postProfile.save();
-    const username = req.body.username;
-    const user = { name: username };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-    res.json({ accessToken: accessToken });
-    res.status(201).send(_id);
-  } catch (error) {
-    next(error);
-  }
-});
+	try {
+		const postProfile = new profileSchema({
+			...req.body,
+      username: req.body.email,
+      experiences:[]
+		})
+		const { _id } = await postProfile.save()
+		const username = req.body.email //req.body.username
+		console.log("username", username)
+		const user = { name: username }
+		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+		res.json({ accessToken: accessToken })
+		res.status(201).send(_id)
+	} catch (error) {
+		next(error)
+	}
+})
+
 router.get("/:id", authenticateToken, async (req, res, next) => {
   try {
     const profile = await profileSchema.findById(req.params.id);
@@ -107,6 +112,7 @@ router.get("/:id", authenticateToken, async (req, res, next) => {
     next(error);
   }
 });
+
 router.put("/:id", authenticateToken, async (req, res, next) => {
   try {
     const post = { ...req.body }
@@ -162,4 +168,18 @@ router.delete("/:id", authenticateToken, async (req, res, next) => {
 		next(error)
 	}
 })
-module.exports = router;
+
+// router.get("/:uid/experience", authenticateToken, async (req, res, next) => {
+//   try {
+//     const { experiences} = await profileSchema.findById(req.params.uid, {
+//       experiences: 1,
+//       _id: 0,
+//     })
+//     res.send(experiences)
+//   } catch (error) {
+//     console.log(error)
+//     next(error)
+//   }
+// })
+
+module.exports = router
