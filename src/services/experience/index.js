@@ -25,6 +25,7 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const cloudinary = require("../../utils/cloudinary")
 
 const { Parser } = require('json2csv');
+const authenticateToken = require("../../authentication")
 
 
 const cloudStorage = new CloudinaryStorage({
