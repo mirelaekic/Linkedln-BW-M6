@@ -22,7 +22,7 @@ const mongoose = require("mongoose")
 const multer = require("multer")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../../utils/cloudinary")
+const {cloudinary} = require("../../utils/cloudinary")
 
 const { Parser } = require('json2csv');
 const authenticateToken = require("../../authentication")
@@ -55,7 +55,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
         error.httpStatusCode = 403
         return next(error)
       }
-      const experience = new experienceSchema({...req.body, image:""})
+      const experience = new experienceSchema({...req.body, image:"",username:req.user.name})
       const experienceToInsert = { ...experience.toObject()}
       
   
@@ -69,7 +69,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
         { runValidators: true, new: true }
       )
       
-      res.status(201).send(updated)
+      res.status(201).send(updated.experiences[updated.experiences.length-1])
     } catch (error) {
         console.log(error)
       next(error)
@@ -195,7 +195,7 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
             new: true,
           }
         )
-        res.send(modifiedexperience)
+        res.send(modifiedexperience.experiences[modifiedexperience.experiences.length-1])
       } else {
         const err = new Error("Profile or experience not found");
         err.httpStatusCode = 404;
@@ -218,6 +218,7 @@ cloudMulter.single("image"),authenticateToken,  async (req, res, next) =>{
     })
     console.log(author.username)
     if (author.username !== req.user.name) {
+
       const error = new Error(
         `Please do not try to change experience with ${req.params.uid}`
       )

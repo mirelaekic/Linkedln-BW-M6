@@ -126,7 +126,7 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 			new: true,
 		})
 		if (newPost) {
-			res.status(201).send(post)
+			res.status(201).send(req.params.id)
 		} else {
 			const error = new Error(`Post with id ${req.params.id} not found`)
 			error.httpStatusCode = 404

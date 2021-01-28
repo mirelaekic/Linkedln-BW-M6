@@ -55,7 +55,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
         error.httpStatusCode = 403
         return next(error)
       }
-      const experience = new experienceSchema({...req.body, image:""})
+      const experience = new experienceSchema({...req.body, image:"", username:req.user.name})
       const experienceToInsert = { ...experience.toObject()}
       
   
