@@ -58,6 +58,29 @@ const profileSchema = require("../profiles/mongo")
 const PostRouter = express.Router()
 const authenticateToken = require("../../authentication")
 
+PostRouter.post("/", authenticateToken, async (req, res, next) => {
+	try {
+		console.log("NEW POST")
+		const post = { ...req.body, image: "" }
+		console.log(post)
+		post.userName = req.user.name
+		console.log(post.userName)
+		post.user = await profileSchema.find(
+			{ username: post.userName },
+			{ _id: 1 }
+		)
+		post.user = post.user[0]._id
+		console.log(post.user)
+		console.log(post)
+		const newPost = new PostSchema(post)
+		const { _id } = await newPost.save()
+		console.log(_id)
+		res.status(201).send(_id)
+	} catch (error) {
+		next(error)
+	}
+})
+
 PostRouter.get("/", authenticateToken, async (req, res, next) => {
 	try {
 		const query = q2m(req.query)
@@ -83,23 +106,6 @@ PostRouter.get("/:id", authenticateToken, async (req, res, next) => {
 	}
 })
 
-PostRouter.post("/", authenticateToken, async (req, res, next) => {
-	try {
-		const post = { ...req.body, image: "" }
-		post.userName = req.user.name
-		post.user = await profileSchema.find(
-			{ username: post.userName },
-			{ _id: 1 }
-		)
-		post.user = post.user[0]._id
-		console.log(post)
-		const newPost = new PostSchema(post)
-		const { _id } = await newPost.save()
-		res.status(201).send(_id)
-	} catch (error) {
-		next(error)
-	}
-})
 
 PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 	try {

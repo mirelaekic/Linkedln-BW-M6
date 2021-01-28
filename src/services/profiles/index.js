@@ -81,7 +81,7 @@ router.post("/", async (req, res, next) => {
     next(error);
   }
 });
-router.post("/cv/:id", async (req, res, next) => {
+router.get("/cv/:id", async (req, res, next) => {
   try {
     const profile = await profileSchema.findById(req.params.id);
     const browser = await puppeteer.launch();
