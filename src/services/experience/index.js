@@ -40,7 +40,7 @@ const cloudMulter =  multer({ storage: cloudStorage})
 const router = express.Router();
 
 
-router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
+router.post("/:uid/experience",async (req, res, next) => {
     try {
       console.log(req.user.name)
       const author = await profileSchema.findById(req.params.uid, {
@@ -76,7 +76,7 @@ router.post("/:uid/experience", authenticateToken,async (req, res, next) => {
     }
   })
   
-router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
+router.get("/:uid/experience",async (req, res, next) => {
     try {
        
       const {experiences }= await profileSchema.findById(req.params.uid, {
@@ -92,7 +92,7 @@ router.get("/:uid/experience", authenticateToken,async (req, res, next) => {
   })
 
 
-router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) => {
+router.get("/:uid/experience/:expId", async (req, res, next) => {
     try {
       const {experiences} = await profileSchema.findOne(
         {
@@ -120,7 +120,7 @@ router.get("/:uid/experience/:expId",authenticateToken, async (req, res, next) =
     }
   })
   
-router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next) => {
+router.delete("/:uid/experience/:expId",async (req, res, next) => {
     try {
       const author = await profileSchema.findById(req.params.uid, {
         _id: 0,
@@ -151,7 +151,7 @@ router.delete("/:uid/experience/:expId", authenticateToken,async (req, res, next
     }
   })
   
-router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) => {
+router.put("/:uid/experience/:expId",async (req, res, next) => {
     try {
       const author = await profileSchema.findById(req.params.uid, {
         _id: 0,
@@ -208,7 +208,7 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
   })
 
 router.post("/:uid/experience/:expId/picture", 
-cloudMulter.single("image"),authenticateToken,  async (req, res, next) =>{
+cloudMulter.single("image"),  async (req, res, next) =>{
   console.log("req file",req.file.path)
 
   try{
@@ -268,7 +268,7 @@ cloudMulter.single("image"),authenticateToken,  async (req, res, next) =>{
   }
 })
 
-router.get("/:uid/ex/csv",authenticateToken,async (req, res, next) => {
+router.get("/:uid/ex/csv",async (req, res, next) => {
   try {
     const {experiences }= await profileSchema.findById(req.params.uid, {
       experiences: 1,
