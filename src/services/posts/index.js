@@ -94,8 +94,9 @@ PostRouter.post("/", authenticateToken, async (req, res, next) => {
 		post.user = post.user[0]._id
 		console.log(post)
 		const newPost = new PostSchema(post)
-		const { _id } = await newPost.save()
-		res.status(201).send(_id)
+		const { id } = await newPost.save()
+		console.log(id)
+		res.status(201).send(id)
 	} catch (error) {
 		next(error)
 	}
@@ -120,7 +121,7 @@ PostRouter.put("/:id", authenticateToken, async (req, res, next) => {
 			new: true,
 		})
 		if (newPost) {
-			res.status(201).send(post)
+			res.status(201).send(req.params.id)
 		} else {
 			const error = new Error(`Post with id ${req.params.id} not found`)
 			error.httpStatusCode = 404
