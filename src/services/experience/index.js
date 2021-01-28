@@ -286,8 +286,8 @@ router.get("/:uid/ex/csv", authenticateToken, async (req, res, next) => {
 		/*	const { experiences } = await profileSchema.findById(req.params.uid, {
 			experiences: 1,
 			_id: 0,
-		})*/
-		console.log(experiences)
+		})
+		console.log(experiences)*/
 
 		const { experiences } = await profileSchema.findOne(
 			{
