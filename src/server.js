@@ -47,7 +47,7 @@ server.use(genericErrorHandler)
 console.log(listEndpoints(server))
 
 mongoose
-	.connect(process.env.MONGO_CONNECTION, {
+	.connect(process.env.MONGO_CONNECTION || 'mongodb+srv://mirelaek:QnZsNvfRobxedmlX@linkedlnapi.fp5m9.mongodb.net/linkedln?retryWrites=true&w=majority', {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
 	})
