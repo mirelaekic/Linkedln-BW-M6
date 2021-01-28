@@ -22,274 +22,272 @@ const mongoose = require("mongoose")
 const multer = require("multer")
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
-const cloudinary = require("../../utils/cloudinary")
+const { cloudinary } = require("../../utils/cloudinary")
 
-const { Parser } = require('json2csv');
-
+const { Parser } = require("json2csv")
 
 const cloudStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-      folder: "linkedin"
-  }
- })
-const cloudMulter =  multer({ storage: cloudStorage})
+	cloudinary: cloudinary,
+	params: {
+		folder: "linkedin",
+	},
+})
+const cloudMulter = multer({ storage: cloudStorage })
 
+const router = express.Router()
 
-const router = express.Router();
+router.post("/:uid/experience", async (req, res, next) => {
+	try {
+		console.log(req.user.name)
+		const author = await profileSchema.findById(req.params.uid, {
+			_id: 0,
+			username: 1,
+		})
+		console.log(author.username)
+		if (author.username !== req.user.name) {
+			const error = new Error(
+				`Please do not try to change experience with ${req.params.uid}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
+		const experience = new experienceSchema({ ...req.body, image: "" })
+		const experienceToInsert = { ...experience.toObject() }
 
+		const updated = await profileSchema.findByIdAndUpdate(
+			req.params.uid,
+			{
+				$push: {
+					experiences: experienceToInsert,
+				},
+			},
+			{ runValidators: true, new: true }
+		)
 
-router.post("/:uid/experience",async (req, res, next) => {
-    try {
-      console.log(req.user.name)
-      const author = await profileSchema.findById(req.params.uid, {
-        _id: 0,
-        username: 1,
-      })
-      console.log(author.username)
-      if (author.username !== req.user.name) {
-        const error = new Error(
-          `Please do not try to change experience with ${req.params.uid}`
-        )
-        error.httpStatusCode = 403
-        return next(error)
-      }
-      const experience = new experienceSchema({...req.body, image:""})
-      const experienceToInsert = { ...experience.toObject()}
-      
-  
-      const updated = await profileSchema.findByIdAndUpdate(
-        req.params.uid,
-        {
-          $push: {
-            experiences: experienceToInsert,
-          },
-        },
-        { runValidators: true, new: true }
-      )
-      
-      res.status(201).send(updated)
-    } catch (error) {
-        console.log(error)
-      next(error)
-    }
-  })
-  
-router.get("/:uid/experience",async (req, res, next) => {
-    try {
-       
-      const {experiences }= await profileSchema.findById(req.params.uid, {
-        experiences: 1,
-        _id: 0,
-      } )
-
-      res.send(experiences)
-    } catch (error) {
-      console.log(error)
-      next(error)
-    }
-  })
-
-
-router.get("/:uid/experience/:expId", async (req, res, next) => {
-    try {
-      const {experiences} = await profileSchema.findOne(
-        {
-          _id: mongoose.Types.ObjectId(req.params.uid),
-        },
-        {
-          _id: 0,
-        experiences: {
-            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
-          },
-        }
-      )
-  
-      if (experiences && experiences.length > 0) {
-        res.send(experiences[0])
-
-      } else {
-        const err = new Error("Profile or experience not found");
-        err.httpStatusCode = 404;
-        next(error);
-      }
-    } catch (error) {
-      console.log(error)
-      next(error)
-    }
-  })
-  
-router.delete("/:uid/experience/:expId",async (req, res, next) => {
-    try {
-      const author = await profileSchema.findById(req.params.uid, {
-        _id: 0,
-        username: 1,
-      })
-      if (author.username !== req.user.name) {
-        const error = new Error(
-          `Please do not try to change experience with ${req.params.uid}`
-        )
-        error.httpStatusCode = 403
-        return next(error)
-      }
-      const modifiedexperience = await profileSchema.findByIdAndUpdate(
-        req.params.uid,
-        {
-          $pull: {
-            experiences: { _id: mongoose.Types.ObjectId(req.params.expId) },
-          },
-        },
-        {
-          new: true,
-        }
-      )
-      res.send(modifiedexperience)
-    } catch (error) {
-      console.log(error)
-      next(error)
-    }
-  })
-  
-router.put("/:uid/experience/:expId",async (req, res, next) => {
-    try {
-      const author = await profileSchema.findById(req.params.uid, {
-        _id: 0,
-        username: 1,
-      })
-      
-      if (author.username !== req.user.name) {
-        const error = new Error(
-          `Please do not try to change experience with ${req.params.uid}`
-        )
-        error.httpStatusCode = 403
-        return next(error)
-      }
-      const { experiences} = await profileSchema.findOne(
-        {
-          _id: mongoose.Types.ObjectId(req.params.uid),
-        },
-        {
-          _id: 0,
-          experiences: {
-            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
-          },
-        }
-      )
-     
-  
-      if (experiences && experiences.length > 0) {
-     
-
-        const experienceToReplace = { ...experiences[0].toObject(), ...req.body }
-
-  
-        const modifiedexperience = await profileSchema.findOneAndUpdate(
-          {
-            _id: mongoose.Types.ObjectId(req.params.uid),
-           "experiences._id": mongoose.Types.ObjectId(req.params.expId),
-          },
-          { $set: { "experiences.$":experienceToReplace }},
-          {
-            runValidators: true,
-            new: true,
-          }
-        )
-        res.send(modifiedexperience)
-      } else {
-        const err = new Error("Profile or experience not found");
-        err.httpStatusCode = 404;
-        next(error);
-      }
-    } catch (error) {
-      console.log(error)
-      next(error)
-    }
-  })
-
-router.post("/:uid/experience/:expId/picture", 
-cloudMulter.single("image"),  async (req, res, next) =>{
-  console.log("req file",req.file.path)
-
-  try{
-    const author = await profileSchema.findById(req.params.uid, {
-      _id: 0,
-      username: 1,
-    })
-    console.log(author.username)
-    if (author.username !== req.user.name) {
-      const error = new Error(
-        `Please do not try to change experience with ${req.params.uid}`
-      )
-      error.httpStatusCode = 403
-      return next(error)
-    }
-   
-    const { experiences} = await profileSchema.findOne(
-      {
-        _id: mongoose.Types.ObjectId(req.params.uid),
-      },
-      {
-        _id: 0,
-        experiences: {
-          $elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
-        },
-      }
-    )
-  
-
-    if (experiences && experiences.length > 0) {
-   
-
-      const experienceToReplace = { ...experiences[0].toObject(), image:req.file.path }
-    
-        const modifiedexperience = await profileSchema.findOneAndUpdate(
-          {
-            _id: mongoose.Types.ObjectId(req.params.uid),
-            "experiences._id": mongoose.Types.ObjectId(req.params.expId),
-          },
-          { $set:{"experiences.$":experienceToReplace } },
-          {
-            runValidators: true,
-            new: true,
-          }
-        )
-        res.status(201).send(modifiedexperience)
-      } else {
-        const err = new Error("Profile or experience not found");
-        err.httpStatusCode = 404;
-        next(error);
-      }
-  
-        }
-  catch(ex){
-      console.log(ex)
-      next(ex)
-  }
+		res.status(201).send(updated)
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
 })
 
-router.get("/:uid/ex/csv",async (req, res, next) => {
-  try {
-    const {experiences }= await profileSchema.findById(req.params.uid, {
-      experiences: 1,
-      _id: 0,
-    } )
-    console.log(experiences)
+router.get("/:uid/experience", async (req, res, next) => {
+	try {
+		const { experiences } = await profileSchema.findById(req.params.uid, {
+			experiences: 1,
+			_id: 0,
+		})
 
-  const fields= ['_id', 'role', 'company', 'startDate','endDate','description','area','username','image']
-const json2csvParser = new Parser({fields});
-  const csv = json2csvParser.parse(experiences);
-  
-console.log(csv);
+		res.send(experiences)
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
+})
 
-res.setHeader("Content-Disposition", "attachment; filename=export.csv")
-res.set("Content-Type", "text/csv")
-res.status(200).send(csv)
+router.get("/:uid/experience/:expId", async (req, res, next) => {
+	try {
+		const { experiences } = await profileSchema.findOne(
+			{
+				_id: mongoose.Types.ObjectId(req.params.uid),
+			},
+			{
+				_id: 0,
+				experiences: {
+					$elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+				},
+			}
+		)
 
- 
-  } catch (error) {
-    console.log(error)
-    next(error)
-  }
- })
-  
-module.exports = router;
+		if (experiences && experiences.length > 0) {
+			res.send(experiences[0])
+		} else {
+			const err = new Error("Profile or experience not found")
+			err.httpStatusCode = 404
+			next(error)
+		}
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
+})
+
+router.delete("/:uid/experience/:expId", async (req, res, next) => {
+	try {
+		const author = await profileSchema.findById(req.params.uid, {
+			_id: 0,
+			username: 1,
+		})
+		if (author.username !== req.user.name) {
+			const error = new Error(
+				`Please do not try to change experience with ${req.params.uid}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
+		const modifiedexperience = await profileSchema.findByIdAndUpdate(
+			req.params.uid,
+			{
+				$pull: {
+					experiences: { _id: mongoose.Types.ObjectId(req.params.expId) },
+				},
+			},
+			{
+				new: true,
+			}
+		)
+		res.send(modifiedexperience)
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
+})
+
+router.put("/:uid/experience/:expId", async (req, res, next) => {
+	try {
+		const author = await profileSchema.findById(req.params.uid, {
+			_id: 0,
+			username: 1,
+		})
+
+		if (author.username !== req.user.name) {
+			const error = new Error(
+				`Please do not try to change experience with ${req.params.uid}`
+			)
+			error.httpStatusCode = 403
+			return next(error)
+		}
+		const { experiences } = await profileSchema.findOne(
+			{
+				_id: mongoose.Types.ObjectId(req.params.uid),
+			},
+			{
+				_id: 0,
+				experiences: {
+					$elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+				},
+			}
+		)
+
+		if (experiences && experiences.length > 0) {
+			const experienceToReplace = { ...experiences[0].toObject(), ...req.body }
+
+			const modifiedexperience = await profileSchema.findOneAndUpdate(
+				{
+					_id: mongoose.Types.ObjectId(req.params.uid),
+					"experiences._id": mongoose.Types.ObjectId(req.params.expId),
+				},
+				{ $set: { "experiences.$": experienceToReplace } },
+				{
+					runValidators: true,
+					new: true,
+				}
+			)
+			res.send(modifiedexperience)
+		} else {
+			const err = new Error("Profile or experience not found")
+			err.httpStatusCode = 404
+			next(error)
+		}
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
+})
+
+router.post(
+	"/:uid/experience/:expId/picture",
+	cloudMulter.single("image"),
+	async (req, res, next) => {
+		console.log("req file", req.file.path)
+
+		try {
+			const author = await profileSchema.findById(req.params.uid, {
+				_id: 0,
+				username: 1,
+			})
+			console.log(author.username)
+			if (author.username !== req.user.name) {
+				const error = new Error(
+					`Please do not try to change experience with ${req.params.uid}`
+				)
+				error.httpStatusCode = 403
+				return next(error)
+			}
+
+			const { experiences } = await profileSchema.findOne(
+				{
+					_id: mongoose.Types.ObjectId(req.params.uid),
+				},
+				{
+					_id: 0,
+					experiences: {
+						$elemMatch: { _id: mongoose.Types.ObjectId(req.params.expId) },
+					},
+				}
+			)
+
+			if (experiences && experiences.length > 0) {
+				const experienceToReplace = {
+					...experiences[0].toObject(),
+					image: req.file.path,
+				}
+
+				const modifiedexperience = await profileSchema.findOneAndUpdate(
+					{
+						_id: mongoose.Types.ObjectId(req.params.uid),
+						"experiences._id": mongoose.Types.ObjectId(req.params.expId),
+					},
+					{ $set: { "experiences.$": experienceToReplace } },
+					{
+						runValidators: true,
+						new: true,
+					}
+				)
+				res.status(201).send(modifiedexperience)
+			} else {
+				const err = new Error("Profile or experience not found")
+				err.httpStatusCode = 404
+				next(error)
+			}
+		} catch (ex) {
+			console.log(ex)
+			next(ex)
+		}
+	}
+)
+
+router.get("/:uid/ex/csv", async (req, res, next) => {
+	try {
+		const { experiences } = await profileSchema.findById(req.params.uid, {
+			experiences: 1,
+			_id: 0,
+		})
+		console.log(experiences)
+
+		const fields = [
+			"_id",
+			"role",
+			"company",
+			"startDate",
+			"endDate",
+			"description",
+			"area",
+			"username",
+			"image",
+		]
+		const json2csvParser = new Parser({ fields })
+		const csv = json2csvParser.parse(experiences)
+
+		console.log(csv)
+
+		res.setHeader("Content-Disposition", "attachment; filename=export.csv")
+		res.set("Content-Type", "text/csv")
+		res.status(200).send(csv)
+	} catch (error) {
+		console.log(error)
+		next(error)
+	}
+})
+
+module.exports = router
