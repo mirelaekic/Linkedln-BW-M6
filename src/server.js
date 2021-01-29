@@ -43,14 +43,18 @@ function authenticateToken(req, res, next) {
 server.use(badRequestHandler)
 server.use(notFoundHandler)
 server.use(genericErrorHandler)
-
+console.log(process.env.MONGO_CONNECTION)
 console.log(listEndpoints(server))
 
 mongoose
-	.connect(process.env.MONGO_CONNECTION || 'mongodb+srv://mirelaek:QnZsNvfRobxedmlX@linkedlnapi.fp5m9.mongodb.net/linkedln?retryWrites=true&w=majority', {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	})
+	.connect(
+		process.env.MONGO_CONNECTION ||
+			"mongodb+srv://mirelaek:QnZsNvfRobxedmlX@linkedlnapi.fp5m9.mongodb.net/linkedln?retryWrites=true&w=majority",
+		{
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		}
+	)
 	.then(
 		server.listen(port, () => {
 			console.log("Running on port", port)
