@@ -41,19 +41,4 @@ router.post("/:postId",async (req, res, next) => {
 		next(error)
 	}
 })
-router.delete("/:commID", async(req,res, next) => {
-    try {
-        const find = await commentSchema.findByIdAndDelete(req.params.commID);
-        if(find){
-            res.send("Deleted")
-        }else{
-            const error = new Error(`Comment with ${req.params.commID} is not found`)
-			error.httpStatusCode = 404
-			next(error)
-        }
-    } catch (error) {
-        
-    }
-})
-
 module.exports = router;

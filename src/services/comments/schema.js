@@ -3,7 +3,7 @@ mongoosePaginate = require("mongoose-paginate-v2")
 const commentSchema = new Schema(
 	{
 		name: {
-			type: String,
+			type: Object,
 			required: true,
 		},
 		comment: {
