@@ -14,13 +14,13 @@ Replace user profile picture (name = profile)
 Generates and download a PDF with the CV of the user (details, picture, experiences)
 */
 
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const profileSchema = require("./mongo");
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const { cloudinary } = require("../../utils/cloudinary");
-const cors = require("cors");
+const express = require("express")
+const jwt = require("jsonwebtoken")
+const profileSchema = require("./mongo")
+const multer = require("multer")
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
+const { cloudinary } = require("../../utils/cloudinary")
+const cors = require("cors")
 const cloudStorage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
@@ -65,53 +65,140 @@ router.get("/me", authenticateToken, async (req, res, next) => {
 	}
 })
 router.post("/", async (req, res, next) => {
-  try {
-    const postProfile = new profileSchema({
-      ...req.body,
-      username: req.body.email,
-      experiences: [],
-    });
-    const { _id } = await postProfile.save();
-    const username = req.body.email; //req.body.username
-    console.log("username", username);
-    const user = { name: username };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-    res.json({ accessToken: accessToken });
-    res.status(201).send(_id);
-  } catch (error) {
-    next(error);
-  }
-});
-router.get("/cv/:id", cors(), async (req, res, next) => {
-  try {
-    const profile = await profileSchema.findById(req.params.id);
-    const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox",'--disable-web-security'],
-    });
-    const page = await browser.newPage();
+	try {
+		const postProfile = new profileSchema({
+			...req.body,
+			username: req.body.email,
+			experiences: [],
+		})
+		const { _id } = await postProfile.save()
+		const username = req.body.email //req.body.username
+		console.log("username", username)
+		const user = { name: username }
+		const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+		res.json({ accessToken: accessToken })
+		res.status(201).send(_id)
+	} catch (error) {
+		next(error)
+	}
+})
 
-		await page.setContent(`
-		<h4 style="color:steelblue;">___Powered by Linkedln_____________________________________________</h4>
-<article style="text-align:center;">
-<img src=${profile.image}  width="200" height="250">
-<p>${profile.name} ${profile.surname}<br> ${profile.email} <br> ${profile.area}</p>
-</article>
-<h4 style="color:steelblue; text-decoration:underline; font-weight:bold; font-family: Arial, Helvetica, sans-serif">ABOUT ME</h4>
-<p>${profile.title} <br> ${profile.bio}</p>
-<h4 style="color:steelblue; text-decoration:underline; font-weight:bold; font-family: Arial, Helvetica, sans-serif">EXPERIENCE</h4>`)
+router.get("/cv/:id", cors(), async (req, res, next) => {
+	try {
+		const profile = await profileSchema.findById(req.params.id)
+		const browser = await puppeteer.launch({
+			args: ["--no-sandbox", "--disable-setuid-sandbox",'--disable-web-security'],
+		})
+		let experiences = ""
+		profile.experiences.forEach((experience) => {
+			experiences += `
+			<div class="card bg-light my-1">
+			<h4 class="card-title">${experience.role}</h4>
+			<div class="card-body pl-1">
+			  
+			  <p class="card-text"><b>for</b> <u>${experience.company}</u> <b>in</b> ${
+				experience.area
+			}</p>
+			  <p class="card-text"><b>from </b>${experience.startDate} <b>to </b>${
+				experience.endDate || "[still employed]"
+			} </p>
+				<h6><b>Main mansions</b></h6>
+				<p class="card-text">${experience.description}</p>
+			</div>
+		  </div>`
+		})
+		const page = await browser.newPage()
+
+		await page.setContent(`<!DOCTYPE html>
+		<html lang="en">
+			<head>
+				<!-- Required meta tags -->
+				<meta charset="utf-8" />
+				
+		
+				<!-- Bootstrap CSS -->
+				<link
+					href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
+					rel="stylesheet"
+					integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1"
+					crossorigin="anonymous"
+				/>
+				<!-- Optional JavaScript; choose one of the two! -->
+		
+				<!-- Option 1: Bootstrap Bundle with Popper -->
+				<script
+					src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+					integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+					crossorigin="anonymous"
+				></script>
+		
+				<title>Curriculum</title>
+			</head>
+			<body>
+					<h4 style="color: steelblue">
+						___Powered by Linkedln_____________________________________________
+					</h4>
+					<div class="jumbotron bg-light p-2 m-4 rounded-5">
+						<h1 class="display-6">
+							${profile.name} ${profile.surname} ${profile.title}
+						</h1>
+						<span class="m-5"><b>Email: </b>${profile.email}</span>
+						<div class="d-flex flex-row">	
+								<div class="">
+									<img src="${profile.image}" width="200" height="250" />
+								</div>
+								<div class="p-4">
+									<p class="lead">
+										<span class=""><b>Location: </b>${profile.area}</span>
+										<span class=""
+											><h4
+												style="
+													color: steelblue;
+													text-decoration: underline;
+													font-weight: bold;
+													font-family: Arial, Helvetica, sans-serif;
+												"
+											>
+												ABOUT ME
+											</h4>
+											<p class="m-3 mt-0">${profile.bio}</p>
+										</span>
+									</p>
+								</div>
+						</div>
+						<hr class="my-4" />
+					</div>
+					<h4
+						style="
+							margin-left:2rem;
+							color: steelblue;
+							text-decoration: underline;
+							font-weight: bold;
+							font-family: Arial, Helvetica, sans-serif;
+						"
+					>
+						EXPERIENCE
+					</h4>
+					<div style="margin-left:2rem;margin-right:2rem;">
+					${experiences}
+					</div>
+					
+			</body>
+		</html>
+		`)
 		await page.emulateMediaFeatures("screen")
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-    });
-    console.log("done");
-    res.contentType("application/pdf");
-    res.send(pdf);
-  } catch (error) {
-    console.log(error);
-  }
-});
+		const pdf = await page.pdf({
+			format: "A4",
+			printBackground: true,
+		})
+		console.log("done")
+		res.contentType("application/pdf")
+		res.send(pdf)
+	} catch (error) {
+		console.log(error)
+	}
+})
 router.get("/:id", authenticateToken, async (req, res, next) => {
 	try {
 		const profile = await profileSchema.findById(req.params.id)
