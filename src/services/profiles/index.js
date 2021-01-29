@@ -20,6 +20,7 @@ const profileSchema = require("./mongo");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const { cloudinary } = require("../../utils/cloudinary");
+const cors = require("cors");
 const cloudStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -81,10 +82,12 @@ router.post("/", async (req, res, next) => {
     next(error);
   }
 });
-router.get("/cv/:id", async (req, res, next) => {
+router.get("/cv/:id", cors(), async (req, res, next) => {
   try {
     const profile = await profileSchema.findById(req.params.id);
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
 
     await page.setContent(`
@@ -99,13 +102,10 @@ router.get("/cv/:id", async (req, res, next) => {
     await page.emulateMediaFeatures("screen");
 
     const pdf = await page.pdf({
-      //path:`${profile.name}${profile.surname}LinkedlnCV.pdf`,
       format: "A4",
       printBackground: true,
     });
     console.log("done");
-    //await browser.close();
-    //process.exit();
     res.contentType("application/pdf");
     res.send(pdf);
   } catch (error) {

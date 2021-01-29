@@ -5,6 +5,7 @@ const listEndpoints = require("express-list-endpoints")
 const mongoose = require("mongoose")
 const profileRouter = require("./services/profiles/index")
 const postsRouter = require("./services/posts")
+const commentRouter = require("./services/comments")
 const experienceRouter = require("./services/experience")
 const jwt = require("jsonwebtoken")
 require("dotenv/config")
@@ -27,6 +28,7 @@ server.use(cors())
 server.use("/profile", profileRouter)
 server.use("/posts", postsRouter)
 server.use("/profile", authenticateToken, experienceRouter)
+server.use("/cmnt",commentRouter)
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"]

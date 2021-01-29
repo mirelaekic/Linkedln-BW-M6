@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs-extra");
-const profile = require("../mongo")
 (async function(){
     try {
         const browser = await puppeteer.launch();

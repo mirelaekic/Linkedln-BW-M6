@@ -43,6 +43,14 @@ const PostSchema = new Schema(
 			required: true,
 		},
 		imageUrl: String,
+		comments:[
+			{
+				name: String,
+
+				comment: String,
+
+			}
+		]
 	},
 	{ timestamps: true }
 )
