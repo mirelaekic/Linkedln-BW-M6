@@ -5,7 +5,7 @@ const PostSchema = require("../posts/schema")
 //const authenticateToken = require("../../authentication")
 const router = express.Router();
 
-router.post("/:postId/comments",async (req, res, next) => {
+router.post("/:postId",async (req, res, next) => {
     try {
       const comment = new commentSchema({...req.body})
       const commentToInsert = { ...comment.toObject()}
@@ -27,7 +27,7 @@ router.post("/:postId/comments",async (req, res, next) => {
       next(error)
     }
   })
-  router.get("/:postId/comments",async (req, res, next) => {
+  router.get("/:postId",async (req, res, next) => {
 
 	try {
 		const { comments } = await PostSchema.findById(req.params.postId, {
@@ -41,5 +41,4 @@ router.post("/:postId/comments",async (req, res, next) => {
 		next(error)
 	}
 })
-
 module.exports = router;
