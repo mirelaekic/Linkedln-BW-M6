@@ -195,7 +195,7 @@ router.put("/:uid/experience/:expId", authenticateToken, async (req, res, next) 
             new: true,
           }
         )
-        res.send(modifiedexperience.experiences[modifiedexperience.experiences.length-1])
+        res.send(experienceToReplace)
       } else {
         const err = new Error("Profile or experience not found");
         err.httpStatusCode = 404;
