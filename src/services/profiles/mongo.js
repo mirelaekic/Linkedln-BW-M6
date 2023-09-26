@@ -6,6 +6,8 @@ mongoosePaginate = require("mongoose-paginate-v2")
 "name": "Diego",
 "surname": "Banovaz",
 "email": "diego@strive.school",
+
+
 "bio": "SW ENG",
 "title": "COO @ Strive School",
 "area": "Berlin",

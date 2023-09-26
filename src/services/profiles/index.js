@@ -83,6 +83,8 @@ router.post("/", async (req, res, next) => {
 	}
 })
 
+
+//PDF--->
 router.get("/cv/:id", cors(), async (req, res, next) => {
 	try {
 		const profile = await profileSchema.findById(req.params.id)
